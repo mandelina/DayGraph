@@ -1,0 +1,26 @@
+{
+  "name": "@daygraph/collector",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured'",
+    "format": "prettier --write . || true"
+  },
+  "dependencies": {
+    "@daygraph/db": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "~5.4.5"
+  },
+  "optionalDependencies": {
+    "active-win": "^8.1.0",
+    "iohook": "^0.9.3",
+    "node-window-manager": "^2.2.5"
+  }
+}
+

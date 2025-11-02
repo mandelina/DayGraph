@@ -1,0 +1,27 @@
+# Node / PNPM
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+.vite/
+.turbo/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Env & local data
+.env
+.env.*
+data/*.sqlite*
+data/*.db
+data/*-journal
+data/*-wal
+data/*-shm
+
+# TypeScript
+*.tsbuildinfo
+

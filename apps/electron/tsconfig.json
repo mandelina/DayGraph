@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@daygraph/shared": ["../../packages/shared/src"],
+      "@daygraph/shared/*": ["../../packages/shared/src/*"],
+      "@daygraph/db": ["../../packages/db/src"],
+      "@daygraph/db/*": ["../../packages/db/src/*"],
+      "@daygraph/collector": ["../../packages/collector/src"],
+      "@daygraph/collector/*": ["../../packages/collector/src/*"]
+    }
+  },
+  "include": ["src", "electron.vite.config.ts"]
+}

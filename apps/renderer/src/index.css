@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 기본 레이아웃 - 데모용 */
+body { @apply bg-zinc-950 text-zinc-100; }
+

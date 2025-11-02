@@ -1,0 +1,23 @@
+{
+  "name": "daygraph-electron",
+  "private": true,
+  "version": "0.1.0",
+  "main": "dist/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite build && electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "rebuild": "electron-rebuild -f -w better-sqlite3 -v 30.0.0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured'"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-vite": "^2.1.0",
+    "typescript": "~5.4.5"
+  }
+}

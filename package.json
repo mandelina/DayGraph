@@ -1,0 +1,27 @@
+{
+  "name": "daygraph",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DayGraph monorepo (Electron + React + Collector)",
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9",
+  "scripts": {
+    "install:all": "pnpm install",
+    "dev": "pnpm -C apps/electron dev",
+    "build": "pnpm -C apps/renderer build && pnpm -C apps/electron build",
+    "preview": "pnpm -C apps/electron preview",
+    "typecheck": "pnpm -r typecheck",
+    "format": "pnpm -r format",
+    "lint": "pnpm -r lint",
+    "collector": "pnpm -C packages/collector start"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "concurrently": "^8.2.2",
+    "dotenv": "^16.4.5",
+    "typescript": "~5.4.5"
+  }
+}
