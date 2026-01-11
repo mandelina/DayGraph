@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev-electron-vite",
+      "type": "shell",
+      "command": "pnpm -C apps/electron dev",
+      "options": {
+        "env": {
+          "ELECTRON_REMOTE_DEBUGGING_PORT": "9222"
+        }
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        {
+          // $tsc-watch를 base로 사용해 유효한 문제 포맷을 제공하고,
+          // electron-vite/Vite의 출력으로 background 완료 신호만 활용
+          "base": "$tsc-watch",
+          "background": {
+            "activeOnStart": true,
+            // dev 시작을 감지(electron-vite v..., VITE v..., vite v... 모두 허용)
+            "beginsPattern": "^(?:\\s*⚡️\\s*)?electron-vite v\\d|^VITE v\\d|^vite v\\d",
+            // 준비 완료 신호(ready in..., dev server running at: ... 등)
+            "endsPattern": "ready in .*|dev server running at:|Electron App started|compiled successfully|built in .*|builder initialized"
+          }
+        }
+      ]
+    },
+    {
+      "label": "build-electron",
+      "type": "shell",
+      "command": "pnpm -C apps/electron build",
+      "problemMatcher": []
+    }
+  ]
+}

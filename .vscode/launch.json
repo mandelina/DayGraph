@@ -1,0 +1,50 @@
+{
+  // VS Code 디버깅 설정
+  // - Dev: electron-vite를 task로 실행하고, Chromium 원격 디버깅 포트(9222)에 renderer를 attach
+  // - Built: electron-vite build 후 dist를 electron으로 실행하여 main 디버깅
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev: Renderer Attach (Electron 9222)",
+      "type": "pwa-chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/apps/renderer",
+      "urlFilter": "http://localhost:5173/*",
+      "timeout": 60000,
+      "preLaunchTask": "dev-electron-vite"
+    },
+    {
+      "name": "Electron Main (built)",
+      "type": "node",
+      "request": "launch",
+      // electron 바이너리를 런타임으로 사용
+      "runtimeExecutable": "${workspaceFolder}/apps/electron/node_modules/.bin/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/apps/electron/node_modules/.bin/electron.cmd"
+      },
+      // 빌드 산출물 main 진입점
+      "args": [
+        "${workspaceFolder}/apps/electron/dist/main/index.js"
+      ],
+      "cwd": "${workspaceFolder}/apps/electron",
+      // 소스맵 매핑
+      "outFiles": [
+        "${workspaceFolder}/apps/electron/dist/main/**/*.js"
+      ],
+      "env": {
+        // 렌더러 디버그용 포트 고정
+        "ELECTRON_REMOTE_DEBUGGING_PORT": "9222"
+      },
+      "preLaunchTask": "build-electron",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Dev: Electron + Renderer Debug",
+      "configurations": ["Dev: Renderer Attach (Electron 9222)"]
+    }
+  ]
+}
+
