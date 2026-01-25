@@ -1,20 +1,28 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 type Props = {
   data: Array<{
-    timestamp: string
-    clicks: number
-    keypress: number
-  }>
-}
+    timestamp: string;
+    clicks: number;
+    keypress: number;
+  }>;
+};
 
 // 가장 단순한 막대 차트로 클릭 수를 표현 (데모)
 export function Timeline({ data }: Props) {
-  const compact = data.slice(0, 120).map(d => ({
+  const compact = data.slice(0, 120).map((d) => ({
     t: d.timestamp.slice(11, 19),
     clicks: d.clicks,
     keypress: d.keypress,
-  }))
+  }));
 
   return (
     <div className="h-64 bg-zinc-900 rounded-lg p-3">
@@ -28,6 +36,5 @@ export function Timeline({ data }: Props) {
         </BarChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
-
