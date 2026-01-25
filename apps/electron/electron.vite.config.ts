@@ -5,8 +5,6 @@ import { resolve } from "node:path";
 // renderer는 별도 apps/renderer 가 dev 서버를 띄움
 export default defineConfig({
   main: {
-    // dev에서 엔트리 인식 문제 방지: entry 명시
-    entry: resolve(__dirname, "src/main/index.ts"),
     resolve: {
       alias: {
         "@daygraph/shared": resolve(__dirname, "../../packages/shared/src"),
@@ -29,8 +27,6 @@ export default defineConfig({
     },
   },
   preload: {
-    // dev에서 엔트리 인식 문제 방지: entry 명시
-    entry: resolve(__dirname, "src/preload/index.ts"),
     resolve: {
       alias: {
         "@daygraph/shared": resolve(__dirname, "../../packages/shared/src"),
@@ -39,9 +35,16 @@ export default defineConfig({
     },
     build: {
       outDir: "dist/preload",
+      // Electron의 preload는 CJS가 가장 호환성이 좋음
+      // (일부 환경에서 ESM preload 파싱 오류 방지)
       rollupOptions: {
         input: resolve(__dirname, "src/preload/index.ts"),
-        output: { entryFileNames: "index.js" },
+        output: {
+          // CommonJS 형식으로 번들
+          format: "cjs",
+          // 확장자를 .cjs로 명시하여 type:module 환경과 충돌 방지
+          entryFileNames: "index.cjs",
+        },
       },
     },
   },
@@ -56,7 +59,13 @@ export default defineConfig({
     },
     server: {
       port: 5173,
+      strictPort: true, // 포트 고정(충돌 시 실패) → main의 기본값/VSCode 태스크와 일치
       open: false,
+      hmr: {
+        protocol: "ws",
+        host: "localhost",
+        port: 5173,
+      },
     },
   },
 });

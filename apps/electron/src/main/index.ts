@@ -14,7 +14,8 @@ if (!app.isPackaged) {
 async function createWindow() {
   // 개발: electron-vite가 제공하는 ELECTRON_RENDERER_URL 사용, 배포: 파일 로드
   const isDev = !app.isPackaged;
-  const preloadPath = join(__dirname, "../preload/index.mjs");
+  // preload는 CJS(.cjs) 번들을 사용하여 ESM 파싱 오류를 피함
+  const preloadPath = join(__dirname, "../preload/index.cjs");
 
   // dev에서 가끔 preload 산출물이 늦게 생성되어 ENOENT가 발생하는 경우가 있어 대기
   if (isDev) {
