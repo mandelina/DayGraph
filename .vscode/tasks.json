@@ -22,10 +22,10 @@
           "base": "$tsc-watch",
           "background": {
             "activeOnStart": true,
-            // dev 시작을 감지(electron-vite v..., VITE v..., vite v... 모두 허용)
-            "beginsPattern": "^(?:\\s*⚡️\\s*)?electron-vite v\\d|^VITE v\\d|^vite v\\d",
-            // 준비 완료 신호(ready in..., dev server running at: ... 등)
-            "endsPattern": "ready in .*|dev server running at:|Electron App started|compiled successfully|built in .*|builder initialized"
+            // dev 시작을 감지(electron-vite v..., VITE v..., vite v..., Local: ... 모두 허용)
+            "beginsPattern": "^(?:\\s*⚡️\\s*)?electron-vite v\\d|^\\s*VITE v\\d|^\\s*vite v\\d|^\\s*dev server running at:|^\\s*Local:\\s?http",
+            // 준비 완료 신호(ready in..., Local: http..., Electron App started 등)
+            "endsPattern": "ready in .*|Local:\\s?http://.*:\\d+|dev server running at:|Electron App started|compiled successfully|built in .*|builder initialized|watching for file changes"
           }
         }
       ]
@@ -34,6 +34,22 @@
       "label": "build-electron",
       "type": "shell",
       "command": "pnpm -C apps/electron build",
+      "problemMatcher": []
+    },
+    {
+      "label": "restart-electron-vite",
+      "type": "shell",
+      "command": "pnpm -C apps/electron restart",
+      "options": {
+        "env": {
+          "ELECTRON_REMOTE_DEBUGGING_PORT": "9222"
+        }
+      },
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
       "problemMatcher": []
     }
   ]

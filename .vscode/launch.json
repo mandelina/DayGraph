@@ -15,6 +15,16 @@
       "preLaunchTask": "dev-electron-vite"
     },
     {
+      "name": "Dev: Renderer Attach (Attach Only)",
+      "type": "pwa-chrome",
+      "request": "attach",
+      // 이미 실행 중인 dev 세션에만 붙습니다 (preLaunchTask 없음)
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/apps/renderer",
+      "urlFilter": "http://localhost:5173/*",
+      "timeout": 60000
+    },
+    {
       "name": "Electron Main (built)",
       "type": "node",
       "request": "launch",
@@ -24,14 +34,10 @@
         "runtimeExecutable": "${workspaceFolder}/apps/electron/node_modules/.bin/electron.cmd"
       },
       // 빌드 산출물 main 진입점
-      "args": [
-        "${workspaceFolder}/apps/electron/dist/main/index.js"
-      ],
+      "args": ["${workspaceFolder}/apps/electron/dist/main/index.js"],
       "cwd": "${workspaceFolder}/apps/electron",
       // 소스맵 매핑
-      "outFiles": [
-        "${workspaceFolder}/apps/electron/dist/main/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/apps/electron/dist/main/**/*.js"],
       "env": {
         // 렌더러 디버그용 포트 고정
         "ELECTRON_REMOTE_DEBUGGING_PORT": "9222"
@@ -47,4 +53,3 @@
     }
   ]
 }
-
