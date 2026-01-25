@@ -5,8 +5,8 @@ type Props = {
 
 export function PlaceholderCard({ title, description }: Props) {
   return (
-    <section className="bg-white/5 rounded-xl p-6 text-center text-white/70">
-      <div className="text-lg font-semibold mb-2">{title}</div>
+    <section className="bg-card rounded-xl p-6 text-center text-muted">
+      <div className="text-lg font-semibold text-foreground mb-2">{title}</div>
       <div className="text-sm">{description}</div>
     </section>
   );

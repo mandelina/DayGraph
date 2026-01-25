@@ -1,4 +1,11 @@
 /* Tailwind 4는 단일 import + source 지시어만으로 빌드가 이뤄짐 */
 @import "tailwindcss";
+@import "./styles/design-tokens.css";
 @source "../index.html";
 @source "./**/*.{ts,tsx}";
+
+@layer base {
+  body {
+    @apply bg-surface text-foreground font-sans;
+  }
+}

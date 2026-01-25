@@ -7,10 +7,10 @@ type Props = {
 
 export function Sidebar({ active, onSelect }: Props) {
   return (
-    <aside className="w-64 border-r border-white/10 bg-zinc-900/80 backdrop-blur-xl p-6 hidden md:flex flex-col gap-6">
+    <aside className="w-64 border-r border-border bg-surfaceMuted/90 backdrop-blur-xl p-6 hidden md:flex flex-col gap-6">
       <div>
-        <div className="text-2xl font-bold">DayGraph</div>
-        <div className="text-xs text-white/60">Active Window Intelligence</div>
+        <div className="text-2xl font-bold text-foreground">DayGraph</div>
+        <div className="text-xs text-muted">Active Window Intelligence</div>
       </div>
       <nav className="space-y-2">
         {NAV_ITEMS.map((item) => {
@@ -21,14 +21,14 @@ export function Sidebar({ active, onSelect }: Props) {
               onClick={() => onSelect(item.label)}
               className={`w-full text-left rounded-xl px-4 py-3 transition border ${
                 isActive
-                  ? "bg-yellow-300 text-black border-yellow-300"
-                  : "border-white/10 bg-white/5 text-white"
+                  ? "bg-primary text-surface border-primary"
+                  : "border-border bg-card text-foreground"
               }`}
             >
               <div className="text-sm font-semibold">{item.label}</div>
               <div
                 className={`text-xs ${
-                  isActive ? "text-black/70" : "text-white/60"
+                  isActive ? "text-surface/70" : "text-muted"
                 }`}
               >
                 {item.description}

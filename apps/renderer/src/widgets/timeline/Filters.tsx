@@ -12,8 +12,8 @@ export function TimelineFilters() {
           key={chip.label}
           className={`px-3 py-1 rounded-full text-xs font-semibold ${
             chip.active
-              ? "bg-indigo-400 text-white"
-              : "bg-white/10 text-white/70"
+              ? "bg-accent text-foreground"
+              : "bg-cardMuted text-muted"
           }`}
         >
           {chip.label}

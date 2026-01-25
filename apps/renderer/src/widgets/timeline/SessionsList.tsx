@@ -15,21 +15,23 @@ export function TimelineSessionsList({ slices }: Props) {
     .slice(0, 6);
 
   return (
-    <section className="bg-white/5 rounded-xl p-4">
+    <section className="bg-card rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-3">상세 세션</h2>
       <div className="space-y-2">
         {topSessions.map((session) => (
           <div
             key={session.start}
-            className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2 border border-white/10"
+            className="flex items-center justify-between bg-cardMuted rounded-lg px-3 py-2 border border-border"
           >
             <div>
-              <div className="text-sm font-semibold">{session.appName}</div>
-              <div className="text-xs text-white/60 truncate max-w-md">
+              <div className="text-sm font-semibold text-foreground">
+                {session.appName}
+              </div>
+              <div className="text-xs text-muted truncate max-w-md">
                 {session.windowTitle}
               </div>
             </div>
-            <div className="flex items-center gap-4 text-xs text-white/70">
+            <div className="flex items-center gap-4 text-xs text-muted">
               <span>
                 {formatHour(session.start)} – {formatHour(session.end)}
               </span>

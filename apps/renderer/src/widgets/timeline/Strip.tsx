@@ -12,8 +12,8 @@ export function TimelineStrip({ slices }: Props) {
   );
   return (
     <div className="space-y-2">
-      <div className="text-xs text-white/60">시간대별 Activity Intensity</div>
-      <div className="flex h-24 rounded-xl overflow-hidden border border-white/10">
+      <div className="text-xs text-muted">시간대별 Activity Intensity</div>
+      <div className="flex h-24 rounded-xl overflow-hidden border border-border">
         {slices.map((slice) => {
           const intensity =
             slice.clicks + slice.keypress + (slice.isActive ? 5 : 0);
@@ -31,14 +31,14 @@ export function TimelineStrip({ slices }: Props) {
                 slice.end,
               )} • ${slice.appName}\n${slice.windowTitle}\n클릭 ${slice.clicks}, 키 ${slice.keypress}`}
             >
-              <div className="absolute inset-x-1 bottom-1 text-[10px] text-white/70 truncate">
+              <div className="absolute inset-x-1 bottom-1 text-[10px] text-foreground/70 truncate">
                 {slice.appName}
               </div>
             </div>
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] text-white/50 uppercase tracking-wide">
+      <div className="flex justify-between text-[10px] text-muted uppercase tracking-wide">
         <span>AM</span>
         <span>NOON</span>
         <span>PM</span>

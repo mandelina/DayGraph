@@ -16,7 +16,7 @@ export default function App() {
   const stats = useMemo(() => summarizeByApp(activities), [activities]);
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 text-white">
+    <div className="flex min-h-screen bg-surface text-foreground">
       <Sidebar active={activeTab} onSelect={setActiveTab} />
       <main className="flex-1 p-6 space-y-6 overflow-y-auto">
         {activeTab === "Today" && <TodayPage apps={stats} />}
