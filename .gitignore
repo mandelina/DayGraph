@@ -16,12 +16,24 @@ Thumbs.db
 # Env & local data
 .env
 .env.*
-data/*.sqlite*
-data/*.db
-data/*-journal
-data/*-wal
-data/*-shm
+# SQLite / DB files (any subdir)
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/*.sqlite-journal
+**/*-journal
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.db-journal
+**/data/*.sqlite*
+
+# Electron packaging artifacts
+**/*.asar
+
+# Misc caches
+.cache/
 
 # TypeScript
 *.tsbuildinfo
-
