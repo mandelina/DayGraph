@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "../shared/ui/Sidebar";
 import { TodayPage } from "../pages/today/ui/TodayPage";
 import { TimelinePage } from "../pages/timeline/ui/TimelinePage";
@@ -6,8 +6,7 @@ import { WeeklyPage } from "../pages/weekly/ui/WeeklyPage";
 import { InsightsPage } from "../pages/insights/ui/InsightsPage";
 import { SettingsPage } from "../pages/settings/ui/SettingsPage";
 import { NAV_ITEMS, NavItem } from "./navigation";
-import { useTodayMock, useTimelineMock } from "./providers/mock-data";
-import { summarizeByApp } from "../entities/activity/lib/calculateScore";
+import { useTodayData, useTimelineMock } from "./providers/useTodayData";
 import { ThemeToggle } from "../shared/ui/ThemeToggle";
 
 export default function App() {
@@ -15,9 +14,8 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("theme") as "dark" | "light") || "dark";
   });
-  const activities = useTodayMock();
+  const todayStats = useTodayData();
   const timelineSlices = useTimelineMock();
-  const stats = useMemo(() => summarizeByApp(activities), [activities]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -31,7 +29,7 @@ export default function App() {
         <div className="flex justify-end">
           <ThemeToggle theme={theme} setTheme={setTheme} />
         </div>
-        {activeTab === "Today" && <TodayPage apps={stats} />}
+        {activeTab === "Today" && <TodayPage apps={todayStats} />}
         {activeTab === "Timeline" && <TimelinePage slices={timelineSlices} />}
         {activeTab === "Weekly" && <WeeklyPage />}
         {activeTab === "Insights" && <InsightsPage />}
