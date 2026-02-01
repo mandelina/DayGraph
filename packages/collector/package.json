@@ -11,7 +11,8 @@
     "format": "prettier --write . || true"
   },
   "dependencies": {
-    "@daygraph/db": "workspace:*"
+    "@daygraph/db": "workspace:*",
+    "better-sqlite3": "^9.6.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
@@ -23,4 +24,3 @@
     "node-window-manager": "^2.2.5"
   }
 }
-
