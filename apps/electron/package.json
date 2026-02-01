@@ -8,21 +8,17 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "rebuild": "electron-rebuild -f -w better-sqlite3 -v 30.0.0",
-    "postinstall": "pnpm run rebuild",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'no lint configured'",
     "restart": "pnpm run stop && pnpm run dev",
     "stop": "pkill -f electron-vite || taskkill /IM electron-vite.exe /F || true"
   },
   "dependencies": {
-    "better-sqlite3": "^9.6.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-vite": "^2.1.0",
-    "electron-rebuild": "^3.2.9",
     "typescript": "~5.4.5"
   }
 }

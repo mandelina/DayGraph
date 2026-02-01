@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { join, resolve, isAbsolute } from "node:path";
 import { promises as fs } from "node:fs";
-// DB 쿼리는 런타임에 동적 import하여 네이티브 모듈 로딩 실패 시 앱 크래시 방지
 import { IPC } from "@daygraph/shared/ipc";
 
 // 개발 디버깅: Electron의 Chromium 원격 디버깅 포트를 활성화해 VS Code가 렌더러에 attach 가능하도록 함
@@ -104,14 +103,22 @@ async function waitForFile(file: string, timeoutMs = 15000, intervalMs = 100) {
   }
 }
 
-// Typed IPC: 당일 로그 조회
+const collectorPort = Number(process.env.COLLECTOR_API_PORT || 8787);
+const collectorHost = process.env.COLLECTOR_API_HOST || "127.0.0.1";
+const collectorBaseUrl = process.env.COLLECTOR_API_URL || `http://${collectorHost}:${collectorPort}`;
+
+// Typed IPC: collector HTTP API를 통해 당일 로그 조회
 ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
   try {
-    const mod = await import("@daygraph/db/queries");
-    return await mod.queryDay(dateISO);
+    const url = new URL("/logs", collectorBaseUrl);
+    url.searchParams.set("date", dateISO);
+    const res = await fetch(url, {
+      headers: { "accept": "application/json" },
+    });
+    if (!res.ok) throw new Error(`collector api ${res.status}`);
+    return await res.json();
   } catch (err) {
-    console.error("[queryDay] failed:", err);
-    // 네이티브 모듈 미빌드 시에도 앱이 뜨도록 빈 배열 반환
+    console.error("[queryDay] collector api failed:", err);
     return [];
   }
 });

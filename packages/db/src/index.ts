@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { mkdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
 import { createRequire } from "node:module";
 
 // 단일 DB 인스턴스 제공
@@ -13,9 +13,11 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export function getDB() {
   if (_db) return _db;
 
-  const datadir = process.env.DATADIR
-    ? resolve(process.env.DATADIR)
-    : resolve(process.cwd(), "data");
+  const baseDir = process.env.DAYGRAPH_ROOT ?? process.env.INIT_CWD ?? process.cwd();
+  const configured = process.env.DATADIR;
+  const datadir = configured
+    ? resolveDataDir(baseDir, configured)
+    : resolve(baseDir, "data");
   mkdirSync(datadir, { recursive: true });
 
   const file = join(datadir, "dev-activity.sqlite");
@@ -41,4 +43,9 @@ export function getDB() {
     created_at TEXT NOT NULL
   )`);
   return _db;
+}
+
+function resolveDataDir(base: string, target: string) {
+  if (isAbsolute(target)) return target;
+  return resolve(base, target);
 }
