@@ -16,6 +16,7 @@ Thumbs.db
 # Env & local data
 .env
 .env.*
+!.env.example
 # SQLite / DB files (any subdir)
 **/*.sqlite
 **/*.sqlite3

@@ -1,5 +1,11 @@
 import 'dotenv/config'
 import { insertActivity } from '@daygraph/db/queries'
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
+
+// pnpm 실행 위치와 관계없이 루트 경로를 고정해 상대 DATADIR이 항상 동일 DB를 가리키도록 함
+const repoRoot = resolve(fileURLToPath(new URL('../../..', import.meta.url)))
+process.env.DAYGRAPH_ROOT ??= repoRoot
 
 // 네이티브 의존성은 개발 편의상 optional로 두고, 실패 시 목업으로 대체
 async function getActiveWindow() {

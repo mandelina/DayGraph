@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import { join } from "node:path";
+import { join, resolve, isAbsolute } from "node:path";
 import { promises as fs } from "node:fs";
 // DB 쿼리는 런타임에 동적 import하여 네이티브 모듈 로딩 실패 시 앱 크래시 방지
 import { IPC } from "@daygraph/shared/ipc";
@@ -10,6 +10,9 @@ if (!app.isPackaged) {
   const port = process.env.ELECTRON_REMOTE_DEBUGGING_PORT || "9222";
   app.commandLine.appendSwitch("remote-debugging-port", port);
 }
+
+// 루트 경로를 고정해 상대 DATADIR이 항상 동일하게 동작하도록 보정
+process.env.DAYGRAPH_ROOT ??= process.env.INIT_CWD ?? process.cwd();
 
 async function createWindow() {
   // 개발: electron-vite가 제공하는 ELECTRON_RENDERER_URL 사용, 배포: 파일 로드
@@ -58,6 +61,33 @@ async function createWindow() {
     });
   }
 }
+/**
+ * 앱 데이터가 저장될 userData/data 디렉터리를 생성하고 DATADIR 환경변수를 세팅
+ */
+// DATADIR가 설정돼 있으면 그대로 사용해 모든 프로세스가 한 DB를 바라보도록 함
+async function ensureDataDir() {
+  const configured = process.env.DATADIR;
+  if (configured) {
+    const base = process.env.DAYGRAPH_ROOT ?? process.env.INIT_CWD ?? process.cwd();
+    const resolvedDir = isAbsolute(configured) ? configured : resolve(base, configured);
+    try {
+      await fs.mkdir(resolvedDir, { recursive: true });
+    } catch (err) {
+      console.error("[dataDir] mkdir failed", err);
+    }
+    process.env.DATADIR = resolvedDir;
+    return resolvedDir;
+  }
+
+  const dir = join(app.getPath("userData"), "data");
+  try {
+    await fs.mkdir(dir, { recursive: true });
+  } catch (err) {
+    console.error("[dataDir] mkdir failed", err);
+  }
+  process.env.DATADIR = dir;
+  return dir;
+}
 
 // 파일 생성 대기 유틸리티 (dev 레이스 컨디션 완화)
 async function waitForFile(file: string, timeoutMs = 15000, intervalMs = 100) {
@@ -87,6 +117,7 @@ ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
 });
 
 app.whenReady().then(async () => {
+  await ensureDataDir();
   await createWindow();
 
   app.on("activate", () => {
