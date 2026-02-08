@@ -1,7 +1,8 @@
 // IPC 채널과 페이로드 타입을 한 곳에서 정의하여 main/preload/renderer가 공유
 export const IPC = {
   channels: {
-    queryDay: 'daygraph:query-day'
+    queryDay: 'daygraph:query-day',
+    getAppIcon: 'daygraph:get-app-icon'
   }
 } as const
 
@@ -9,6 +10,8 @@ export type QueryDayRequest = string // date ISO (YYYY-MM-DD)
 export type QueryDayResponse = Array<{
   timestamp: string
   app_name: string
+  app_path: string | null
+  bundle_id: string | null
   window_title: string
   display_id: number | null
   is_active: boolean
@@ -17,3 +20,8 @@ export type QueryDayResponse = Array<{
   created_at: string
 }>
 
+export type GetAppIconRequest = {
+  appPath?: string | null
+  bundleId?: string | null
+}
+export type GetAppIconResponse = string | null

@@ -5,6 +5,8 @@ export const activityLog = sqliteTable('activity_log', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   timestamp: text('timestamp').notNull(), // ISO string
   app_name: text('app_name').notNull(),
+  app_path: text('app_path'),
+  bundle_id: text('bundle_id'),
   window_title: text('window_title').notNull(),
   display_id: integer('display_id'),
   is_active: integer('is_active', { mode: 'boolean' }).notNull().default(true),
@@ -14,4 +16,3 @@ export const activityLog = sqliteTable('activity_log', {
 })
 
 export type ActivityLog = typeof activityLog.$inferSelect
-

@@ -1,21 +1,39 @@
 import "dotenv/config";
 import { insertActivity, queryDay } from "@daygraph/db/queries";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { resolve, join } from "node:path";
 import { createServer } from "node:http";
 import { parse } from "node:url";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { homedir } from "node:os";
+import { promises as fs } from "node:fs";
 
 // pnpm 실행 위치와 관계없이 루트 경로를 고정해 상대 DATADIR이 항상 동일 DB를 가리키도록 함
 const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 process.env.DAYGRAPH_ROOT ??= repoRoot;
+const fallbackApps = ["Cat", "Rabbit", "Hamster"];
+const bundlePathCache = new Map<string, string | null>();
+const execFileAsync = promisify(execFile);
 
 // 네이티브 의존성은 개발 편의상 optional로 두고, 실패 시 목업으로 대체
-async function getActiveWindow() {
+type ActiveWindowInfo = {
+  app: string;
+  path: string | null;
+  bundleId: string | null;
+  title: string;
+  bounds?: { x: number; y: number; width: number; height: number } | undefined;
+};
+
+async function getActiveWindow(): Promise<ActiveWindowInfo> {
   try {
     const mod = await import("active-win");
     const res = await (mod.default as any)();
+
     return {
       app: res.owner?.name ?? "Unknown",
+      path: res.owner?.path ?? null,
+      bundleId: res.owner?.bundleId ?? null,
       title: res.title ?? "Unknown",
       bounds: res.bounds as
         | { x: number; y: number; width: number; height: number }
@@ -25,10 +43,12 @@ async function getActiveWindow() {
     console.log("res error : ", e);
 
     // 목업: 간단 라운드 로빈 앱 이름
-    const i = Math.floor(Date.now() / 5000) % apps.length;
+    const i = Math.floor(Date.now() / 5000) % fallbackApps.length;
     return {
-      app: apps[i],
-      title: `${apps[i]} — Mock`,
+      app: fallbackApps[i],
+      path: null,
+      bundleId: null,
+      title: `${fallbackApps[i]} — Mock`,
       bounds: { x: 0, y: 0, width: 100, height: 100 },
     };
   }
@@ -37,6 +57,8 @@ async function getActiveWindow() {
 // 클릭/키보드 카운터 (iohook 실패 시 window 이벤트 없음 → 목업 증가 X)
 let clicks = 0;
 let keypress = 0;
+const missingPathApps = new Set<string>();
+const missingBundleApps = new Set<string>();
 
 async function setupInputHooks() {
   try {
@@ -60,9 +82,44 @@ function calcDisplayId(
 async function tick() {
   const win = await getActiveWindow();
   const now = new Date().toISOString();
+  if (!win.path && !missingPathApps.has(win.app)) {
+    missingPathApps.add(win.app);
+    console.warn("[collector] app path missing", {
+      app: win.app,
+      title: win.title,
+    });
+  }
+  if (!win.bundleId && !missingBundleApps.has(win.app)) {
+    missingBundleApps.add(win.app);
+    console.warn("[collector] bundle id missing", {
+      app: win.app,
+      title: win.title,
+    });
+  }
+  let resolvedPath = win.path ?? null;
+  if (process.platform === "darwin" && win.bundleId) {
+    const canonical = await resolveAppPathFromBundleId(win.bundleId);
+    if (canonical) {
+      if (resolvedPath && resolvedPath !== canonical) {
+        console.log("[collector] path patched", {
+          app: win.app,
+          from: resolvedPath,
+          to: canonical,
+        });
+      }
+      resolvedPath = canonical;
+    } else {
+      console.warn("[collector] bundleId resolve failed", {
+        app: win.app,
+        bundleId: win.bundleId,
+      });
+    }
+  }
   await insertActivity({
     timestamp: now,
     app_name: win.app,
+    app_path: resolvedPath,
+    bundle_id: win.bundleId ?? null,
     window_title: win.title,
     display_id: calcDisplayId(win.bounds),
     is_active: true,
@@ -72,6 +129,86 @@ async function tick() {
   // 1초마다 집계 저장 후 초기화
   clicks = 0;
   keypress = 0;
+}
+
+/**
+ * bundleId 기준으로 Spotlight/폴더 스캔을 수행해 대표 앱 경로를 캐시한다.
+ */
+async function resolveAppPathFromBundleId(bundleId: string) {
+  if (bundlePathCache.has(bundleId)) {
+    return bundlePathCache.get(bundleId) ?? null;
+  }
+  try {
+    const spotlight = await runMdfind(bundleId);
+    if (spotlight) {
+      bundlePathCache.set(bundleId, spotlight);
+      return spotlight;
+    }
+  } catch (err) {
+    console.warn("[collector] mdfind failed", bundleId, err);
+  }
+  const fallback = await scanCommonAppDirs(bundleId);
+  bundlePathCache.set(bundleId, fallback);
+  return fallback;
+}
+
+/**
+ * macOS Spotlight(mdfind)로 CFBundleIdentifier에 해당하는 .app 경로를 찾는다.
+ */
+async function runMdfind(bundleId: string): Promise<string | null> {
+  const query = `kMDItemCFBundleIdentifier == "${bundleId}"`;
+  const { stdout } = await execFileAsync("mdfind", [query]);
+  const first = stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .filter((s) => s.endsWith(".app"))[0];
+  return first || null;
+}
+
+/**
+ * Spotlight 실패 시 /Applications 등 대표 경로를 순회하며 번들을 찾는다.
+ */
+async function scanCommonAppDirs(bundleId: string) {
+  const dirs = [
+    "/Applications",
+    join(homedir(), "Applications"),
+    "/System/Applications",
+  ];
+  for (const dir of dirs) {
+    const match = await findBundleInDir(dir, bundleId);
+    if (match) return match;
+  }
+  return null;
+}
+
+/**
+ * 주어진 디렉터리의 .app 폴더를 스캔해 Info.plist와 bundleId를 비교한다.
+ */
+async function findBundleInDir(baseDir: string, bundleId: string) {
+  try {
+    const entries = await fs.readdir(baseDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.endsWith(".app")) {
+        const full = join(baseDir, entry.name);
+        const id = await readBundleId(full);
+        if (id === bundleId) return full;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Info.plist에서 CFBundleIdentifier 문자열을 추출한다.
+ */
+async function readBundleId(appPath: string) {
+  try {
+    const plist = await fs.readFile(join(appPath, "Contents", "Info.plist"), "utf8");
+    const match = plist.match(/<key>CFBundleIdentifier<\/key>\s*<string>([^<]+)<\/string>/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 async function main() {

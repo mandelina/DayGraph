@@ -35,6 +35,8 @@ export function getDB() {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp TEXT NOT NULL,
     app_name TEXT NOT NULL,
+    app_path TEXT,
+    bundle_id TEXT,
     window_title TEXT NOT NULL,
     display_id INTEGER,
     is_active INTEGER NOT NULL DEFAULT 1,
@@ -42,6 +44,22 @@ export function getDB() {
     keypress INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
   )`);
+  try {
+    sqlite.exec("ALTER TABLE activity_log ADD COLUMN app_path TEXT");
+  } catch (err) {
+    const message = String(err);
+    if (!message.includes("duplicate column name")) {
+      throw err;
+    }
+  }
+  try {
+    sqlite.exec("ALTER TABLE activity_log ADD COLUMN bundle_id TEXT");
+  } catch (err) {
+    const message = String(err);
+    if (!message.includes("duplicate column name")) {
+      throw err;
+    }
+  }
   return _db;
 }
 

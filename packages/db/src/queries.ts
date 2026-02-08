@@ -6,6 +6,8 @@ import { sql } from 'drizzle-orm'
 export function insertActivity(entry: {
   timestamp: string
   app_name: string
+  app_path?: string | null
+  bundle_id?: string | null
   window_title: string
   display_id: number | null
   is_active: boolean
@@ -14,7 +16,15 @@ export function insertActivity(entry: {
 }) {
   const db = getDB()
   const createdAt = new Date().toISOString()
-  return db.insert(activityLog).values({ ...entry, created_at: createdAt }).run()
+  return db
+    .insert(activityLog)
+    .values({
+      ...entry,
+      app_path: entry.app_path ?? null,
+      bundle_id: entry.bundle_id ?? null,
+      created_at: createdAt
+    })
+    .run()
 }
 
 // YYYY-MM-DD 기준으로 당일 데이터 조회
