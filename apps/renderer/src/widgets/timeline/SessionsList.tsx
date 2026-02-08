@@ -1,5 +1,6 @@
 import { TimelineSlice } from "../../entities/activity/model";
 import { formatHour } from "../../shared/lib/time";
+import { AppIcon } from "../../shared/ui/AppIcon";
 
 type Props = {
   slices: TimelineSlice[];
@@ -23,7 +24,13 @@ export function TimelineSessionsList({ slices }: Props) {
             key={session.start}
             className="flex items-center justify-between bg-cardMuted rounded-lg px-3 py-2 border border-border"
           >
-            <div>
+            <div className="flex items-center gap-3">
+              <AppIcon
+                appName={session.appName}
+                appPath={session.appPath}
+                bundleId={session.bundleId}
+                size={28}
+              />
               <div className="text-sm font-semibold text-foreground">
                 {session.appName}
               </div>

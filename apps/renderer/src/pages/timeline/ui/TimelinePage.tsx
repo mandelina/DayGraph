@@ -1,13 +1,17 @@
-import { TimelineSlice } from "../../../entities/activity/model";
+import {
+  TimelineSlice,
+  TimelineBucket,
+} from "../../../entities/activity/model";
 import { TimelineFilters } from "../../../widgets/timeline/Filters";
 import { TimelineStrip } from "../../../widgets/timeline/Strip";
 import { TimelineSessionsList } from "../../../widgets/timeline/SessionsList";
 
 type Props = {
   slices: TimelineSlice[];
+  buckets: TimelineBucket[];
 };
 
-export function TimelinePage({ slices }: Props) {
+export function TimelinePage({ slices, buckets }: Props) {
   return (
     <>
       <header className="bg-accent text-foreground px-4 py-3 rounded-xl flex items-center justify-between">
@@ -23,7 +27,7 @@ export function TimelinePage({ slices }: Props) {
       </header>
       <section className="bg-card rounded-xl p-4 space-y-4">
         <TimelineFilters />
-        <TimelineStrip slices={slices} />
+        <TimelineStrip buckets={buckets} />
       </section>
       <TimelineSessionsList slices={slices} />
     </>
