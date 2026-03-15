@@ -1,4 +1,10 @@
-import { app, BrowserWindow, ipcMain, nativeImage } from "electron";
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  nativeImage,
+  type NativeImage,
+} from "electron";
 import { join, resolve, isAbsolute } from "node:path";
 import { promises as fs } from "node:fs";
 import { execFile } from "node:child_process";
@@ -242,7 +248,7 @@ async function readIconFromDisk(appPath: string, mtime: number) {
 
 async function persistIcon(
   appPath: string,
-  icon: nativeImage,
+  icon: NativeImage,
   mtime: number
 ): Promise<string | null> {
   const paths = getIconCachePaths(appPath);
