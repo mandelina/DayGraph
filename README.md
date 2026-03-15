@@ -99,6 +99,8 @@ pnpm install
 
 pnpm dev
 
+- collector + Electron + renderer 개발 서버를 함께 실행합니다.
+
 ### 3) 빌드
 
 pnpm build
