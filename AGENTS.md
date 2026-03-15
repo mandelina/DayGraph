@@ -22,7 +22,7 @@
 
 ## 고정 환경
 
-- Node 18.x / Electron 30.x / Vite 5.x / TypeScript 5.4 / React 18 / Tailwind 3.4
+- Node 22.x / Electron 30.x / Vite 5.x / TypeScript 5.4 / React 18 / Tailwind 3.4
 - 패키지 매니저: pnpm
 - macOS & Windows 모두 동작해야 함
 - 모든 데이터는 로컬 SQLite만 사용하고 외부로 전송하지 않음

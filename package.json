@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "description": "DayGraph monorepo (Electron + React + Collector)",
   "engines": {
-    "node": ">=18"
+    "node": ">=22 <23"
   },
-  "packageManager": "pnpm@9",
+  "packageManager": "pnpm@9.15.1",
   "scripts": {
     "install:all": "pnpm install",
     "dev": "pnpm -C apps/electron dev",
