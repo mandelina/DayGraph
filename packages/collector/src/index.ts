@@ -4,10 +4,11 @@ import { fileURLToPath } from "node:url";
 import { resolve, join } from "node:path";
 import { createServer } from "node:http";
 import { parse } from "node:url";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { homedir } from "node:os";
 import { promises as fs } from "node:fs";
+import { createInterface } from "node:readline";
 
 // pnpm 실행 위치와 관계없이 루트 경로를 고정해 상대 DATADIR이 항상 동일 DB를 가리키도록 함
 const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
@@ -15,6 +16,9 @@ process.env.DAYGRAPH_ROOT ??= repoRoot;
 const fallbackApps = ["Cat", "Rabbit", "Hamster"];
 const bundlePathCache = new Map<string, string | null>();
 const execFileAsync = promisify(execFile);
+const prebuiltInputHelpers = {
+  darwin: fileURLToPath(new URL("../bin/darwin/daygraph-input-helper", import.meta.url)),
+} as const;
 
 // 네이티브 의존성은 개발 편의상 optional로 두고, 실패 시 목업으로 대체
 type ActiveWindowInfo = {
@@ -54,21 +58,122 @@ async function getActiveWindow(): Promise<ActiveWindowInfo> {
   }
 }
 
-// 클릭/키보드 카운터 (iohook 실패 시 window 이벤트 없음 → 목업 증가 X)
+// 입력 카운터는 별도 helper 프로세스 stdout 이벤트를 1초 버킷으로 누적
 let clicks = 0;
 let keypress = 0;
 const missingPathApps = new Set<string>();
 const missingBundleApps = new Set<string>();
+let inputHelperProcess: ReturnType<typeof spawn> | null = null;
+let inputBackend = "noop";
+let inputBackendError: string | null = null;
 
 async function setupInputHooks() {
-  try {
-    const iohook = await import("iohook");
-    iohook.default.on("mouseclick", () => clicks++);
-    iohook.default.on("keydown", () => keypress++);
-    iohook.default.start();
-  } catch {
-    // 목업 모드: 아무 것도 하지 않음
+  if (process.platform !== "darwin") {
+    inputBackendError = `input helper unsupported on ${process.platform}`;
+    console.warn("[collector][input]", inputBackendError);
+    return;
   }
+
+  try {
+    const binary = await getPrebuiltInputHelperPath();
+    await startMacInputHelper(binary);
+    inputBackend = "macos-event-tap";
+    inputBackendError = null;
+    console.log("[collector][input] backend ready", inputBackend);
+  } catch (err) {
+    inputBackend = "noop";
+    inputBackendError = formatError(err);
+    console.error("[collector][input] helper setup failed", err);
+  }
+}
+
+async function getPrebuiltInputHelperPath() {
+  const binaryPath = prebuiltInputHelpers.darwin;
+  try {
+    await fs.access(binaryPath);
+  } catch {
+    throw new Error(
+      `missing prebuilt input helper: ${binaryPath}. Run 'pnpm -C packages/collector build:helper:darwin'.`
+    );
+  }
+  return binaryPath;
+}
+
+async function startMacInputHelper(binaryPath: string) {
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(binaryPath, [], {
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    inputHelperProcess = child;
+
+    const lines = createInterface({ input: child.stdout });
+    lines.on("line", (line) => {
+      if (line === "k") {
+        keypress += 1;
+        return;
+      }
+      if (line === "c") {
+        clicks += 1;
+        return;
+      }
+      if (line) {
+        console.warn("[collector][input] unknown event", line);
+      }
+    });
+
+    child.stderr.on("data", (chunk) => {
+      const message = chunk.toString().trim();
+      if (message) {
+        console.warn("[collector][input]", message);
+      }
+    });
+
+    let settled = false;
+    const readyTimer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        resolve();
+      }
+    }, 150);
+
+    child.once("error", (err) => {
+      clearTimeout(readyTimer);
+      lines.close();
+      inputHelperProcess = null;
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
+    });
+
+    child.once("exit", (code, signal) => {
+      clearTimeout(readyTimer);
+      lines.close();
+      inputHelperProcess = null;
+      const reason = `helper exited (code=${code ?? "null"}, signal=${
+        signal ?? "null"
+      })`;
+      inputBackend = "noop";
+      inputBackendError = reason;
+      if (!settled) {
+        settled = true;
+        reject(new Error(reason));
+        return;
+      }
+      console.warn("[collector][input]", reason);
+    });
+  });
+}
+
+function stopInputHooks() {
+  if (inputHelperProcess && !inputHelperProcess.killed) {
+    inputHelperProcess.kill();
+  }
+}
+
+function formatError(err: unknown) {
+  if (err instanceof Error) return err.message;
+  return String(err);
 }
 
 function calcDisplayId(
@@ -213,6 +318,15 @@ async function readBundleId(appPath: string) {
 
 async function main() {
   await setupInputHooks();
+  process.once("exit", stopInputHooks);
+  process.once("SIGINT", () => {
+    stopInputHooks();
+    process.exit(0);
+  });
+  process.once("SIGTERM", () => {
+    stopInputHooks();
+    process.exit(0);
+  });
   // 루프 ≤ 5ms/틱 유지: 실제 작업은 DB insert 1초/회
   setInterval(() => {
     void tick();
