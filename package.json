@@ -13,6 +13,8 @@
     "build": "pnpm -C apps/renderer build && pnpm -C apps/electron build",
     "preview": "pnpm -C apps/electron preview",
     "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test",
     "format": "pnpm -r format",
     "lint": "pnpm -r lint",
     "collector": "pnpm -C packages/collector start"
@@ -22,6 +24,7 @@
     "@types/react-dom": "^19.2.2",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
-    "typescript": "~5.4.5"
+    "typescript": "~5.4.5",
+    "vitest": "^1.6.1"
   }
 }

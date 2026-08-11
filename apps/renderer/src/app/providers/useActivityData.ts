@@ -132,7 +132,7 @@ function formatError(err: unknown) {
  * 1초 간격 Activity 로그를 가로 시간대 구간으로 묶어 TimelineSlice 배열로 변환한다.
  * 앱/윈도우가 동일하고 1.5초 이내로 연속된 데이터는 하나의 블록으로 합쳐 밀도 그래프를 부드럽게 만든다.
  */
-function buildTimelineSlices(data: Activity[]): TimelineSlice[] {
+export function buildTimelineSlices(data: Activity[]): TimelineSlice[] {
   if (data.length === 0) return [];
   const sorted = [...data].sort((a, b) =>
     a.timestamp.localeCompare(b.timestamp),
@@ -216,7 +216,7 @@ function generateMockActivities(): Activity[] {
   });
 }
 
-function bucketizeTimeline(slices: TimelineSlice[]): TimelineBucket[] {
+export function bucketizeTimeline(slices: TimelineSlice[]): TimelineBucket[] {
   if (slices.length === 0) return [];
   const map = new Map<number, BucketAccumulator>();
   for (const slice of slices) {
