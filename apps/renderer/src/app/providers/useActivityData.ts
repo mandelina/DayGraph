@@ -7,6 +7,7 @@ import {
   TimelineBucketApp,
 } from "../../entities/activity/model";
 import { summarizeByApp } from "../../entities/activity/lib/calculateScore";
+import { formatLocalDateISO } from "../../shared/lib/time";
 
 const POLL_INTERVAL_MS = 5000;
 const BUCKET_MINUTES = 5;
@@ -27,7 +28,7 @@ export function useActivityData(): ActivityData {
   const [rows, setRows] = useState<Activity[]>([]);
 
   useEffect(() => {
-    const todayISO = new Date().toISOString().slice(0, 10);
+    const todayISO = formatLocalDateISO();
     let disposed = false;
 
     const fetchDay = () => {

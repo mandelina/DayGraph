@@ -346,7 +346,7 @@ function startApiServer() {
       const date =
         typeof url.query.date === "string"
           ? url.query.date
-          : new Date().toISOString().slice(0, 10);
+          : formatLocalDateISO();
       try {
         const rows = await queryDay(date);
         res.writeHead(200, { "content-type": "application/json" });
@@ -364,6 +364,13 @@ function startApiServer() {
   server.listen(port, host, () => {
     console.log(`[collector] api listening at http://${host}:${port}`);
   });
+}
+
+function formatLocalDateISO(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 main().catch((e) => {
