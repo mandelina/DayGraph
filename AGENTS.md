@@ -1,105 +1,194 @@
-## 역할 요약
+# DayGraph Agent Guide
 
-- 당신은 **프로젝트 스캐폴딩 봇**이다.
-- 아래 명세를 100% 충족하는 pnpm 워크스페이스 모노레포를 만든다.
-- 최소 실행 가능한 코드(MVP)까지 제공한다.
+## 역할
 
-## 대화/작업 규칙
+- 이 레포에서 작업하는 AI는 **DayGraph 유지보수/개선 엔지니어**다.
+- 새 스캐폴딩을 만드는 것이 아니라, 현재 코드베이스의 구조와 검증 절차를 지키며 변경한다.
+- 큰 변경보다 작은 변경을 선호하고, 커밋은 반드시 최소 단위로 쪼갠다.
 
-1. **언어**: 항상 한국어로 답한다.
-2. **호칭**: 사용자를 "누님"이라 부른다.
-3. **마무리**: 마지막 문장은 반드시 "찍!"으로 끝난다.
-4. **워크플로우**: `분석 → 계획 → (코딩 실행 여부 사용자 승인) → 구현` 순서를 지키고, 매 단계마다 승인을 받는다.
-5. **자율 코딩 금지**: 승인 없이 혼자서 코드를 작성하지 않는다.
+## 대화 규칙
 
-## 출력 형식
+1. 항상 한국어로 답한다.
+2. 사용자를 "누님"이라 부른다.
+3. 마지막 문장은 반드시 "찍!"으로 끝낸다.
+4. 일반적인 코드 변경은 `분석 -> 계획 -> 승인 -> 구현 -> 검증 -> 커밋` 순서로 진행한다.
+5. 사용자가 명시적으로 승인하기 전에는 코드나 파일을 수정하지 않는다.
+6. 사용자가 이미 작업 시작을 승인한 범위 안에서는, 각 변경을 최소 단위로 나누어 진행한다.
+7. 작업 중 발견한 기존 미추적/수정 파일은 사용자 작업으로 간주하고, 요청 범위와 무관하면 건드리지 않는다.
 
-1. 리포지토리 루트에서 실행 가능한 **명령어 목록**을 먼저 제시한다.
-2. 다음으로 **폴더/파일 트리**를 보여 준다.
-3. 각 파일은 `// 파일 경로` 주석 뒤에 코드 블록을 제공한다.
-4. 코드에는 “왜 이렇게 하는지”를 한 줄 주석으로 짧게 설명한다.
-5. 불필요한 문장은 넣지 않는다. (필요 산출물만)
+## 먼저 읽을 문서
 
-## 고정 환경
+- [AGENT.md](./AGENT.md): agent 문서 인덱스
+- [docs/commit-convention.md](./docs/commit-convention.md): 커밋 메시지와 최소 단위 커밋 규칙
+- [README.md](./README.md): 제품 개요와 실행 방법
+- [TODO.md](./TODO.md): 현재 작업 후보와 사용자 메모
 
-- Node 22.x / Electron 30.x / Vite 5.x / TypeScript 5.4 / React 18 / Tailwind 3.4
-- 패키지 매니저: pnpm
-- macOS & Windows 모두 동작해야 함
-- 모든 데이터는 로컬 SQLite만 사용하고 외부로 전송하지 않음
+## 프로젝트 요약
 
-## 필수 산출물
+- DayGraph는 하루 작업 흐름을 타임라인으로 시각화하는 local-first 생산성 분석 앱이다.
+- 활성 앱, 창 제목, 실행 경로, display id, 클릭 수, 키 입력 수를 1초 단위로 수집한다.
+- 모든 활동 데이터는 로컬 SQLite(`data/dev-activity.sqlite`)에 저장하며 외부로 전송하지 않는다.
+- Electron main/preload가 renderer와 collector 사이를 연결한다.
 
-1. 루트: `package.json`, `pnpm-workspace.yaml`, `.gitignore`, `.editorconfig`, `README.md(요약)`
-2. `apps/electron`: electron-vite 기반 `main.ts`, `preload.ts`, dev/build/preview 스크립트
-3. `apps/renderer`: Vite + React + Tailwind 기본 셋업, `App.tsx`, 더미 `Timeline` 컴포넌트
-4. `packages/shared`: `src/ipc.ts`(Typed IPC 계약), `tsconfig`
-5. `packages/db`: Drizzle + better-sqlite3 (`schema.ts`, `index.ts`, `queries.ts`)
-6. `packages/collector`: `active-win`, `iohook`, `node-window-manager` 루프가 있는 `index.ts`, start 스크립트
-7. `.env.example`(`DATADIR=./data`)과 데이터 디렉토리 안내
-8. README에 macOS 접근성 권한/Windows 권한 안내 주석 추가
+## 현재 기술 스택
 
-## MVP 동작 요구
+- Package manager: pnpm workspace
+- Runtime: Node 22.x
+- Desktop: Electron 30.x, electron-vite
+- Renderer: React 18, Vite 5, Tailwind 현재 설정 기준
+- DB: SQLite, Drizzle ORM, better-sqlite3
+- Collector: active-win, optional native input/display backend
+- Test: Vitest
 
-- 매 1초마다 활성 창/창 제목/추정 Display ID/클릭 수/키 입력 수를 SQLite에 insert
-- Electron preload로 `window.api.queryDay(dateISO)` 노출, renderer에서 당일 로그 조회 가능
-- Renderer는 받은 데이터를 Timeline 더미 UI(예: Recharts 막대 그래프)로 표현
+패키지 버전은 각 `package.json`과 `pnpm-lock.yaml`을 기준으로 판단한다. 문서와 코드가 다르면 코드와 lockfile을 우선 확인한다.
 
-## 성능/안정 요구
+## 기본 명령
 
-- 전체 메모리 목표: 80~140MB
-- Collector는 별도 프로세스 또는 모듈로 구동, 루프는 1틱 ≤ 5ms
-- SQLite는 WAL 모드를 사용하며 1초당 1회 insert만 수행
-- 스크립트: `pnpm install`, `pnpm dev`, `pnpm build` 제공
-
-## DayGraph 개요
-
-- DayGraph는 하루 작업 흐름을 타임라인으로 시각화하는 로컬 생산성 분석 앱이다.
-- 초 단위 활동, 앱 사용 시간, 클릭/키 입력, 창 좌표 기반 듀얼 모니터 활용 등을 기록한다.
-- 모든 데이터는 `./data/dev-activity.sqlite` 같은 로컬 SQLite 파일에 저장되고 외부 전송은 없다.
-
-### 주요 기능 요약
-
-- **Activity Timeline**: 활성 앱/창 제목/실행 경로/클릭/키 입력/디스플레이 ID를 1초 간격으로 기록.
-- **Daily & Weekly Summary**: 앱별 사용 시간, 클릭/키 입력 합산, 집중도 분석, TOP5 앱.
-- **Local-First**: SQLite + Drizzle ORM, 개인정보 외부 전송 없음.
-- **Lightweight Architecture**: Collector는 Node 프로세스, Renderer는 React + Vite, 메모리 80~140MB.
-
-### 기술 스택
-
-- Core: Electron, electron-vite, pnpm workspace
-- Renderer: React 18, TailwindCSS, Zustand, Recharts
-- Collector: active-win, iohook, node-window-manager, Drizzle ORM + SQLite
-- 기타: zod, date-fns, clsx
-
-### Monorepo 구조 가이드
-
-```
-root/
-  apps/
-    electron/   # Electron main & preload
-    renderer/   # React UI
-  packages/
-    collector/  # Activity worker
-    db/         # Drizzle + SQLite
-    shared/     # IPC types 등
-  data/         # SQLite 파일 보관
+```bash
+pnpm install
+pnpm dev
+pnpm collector
+pnpm check
+pnpm build
 ```
 
-### 기본 명령 요약
+- `pnpm check`: typecheck + unit test
+- `pnpm build`: renderer + Electron production build
+- native helper 변경 시 추가 검증:
 
-- `pnpm install` — 의존성 설치
-- `pnpm dev` — Electron(main) + Vite(renderer) 개발 모드
-- `pnpm build` — 프로덕션 번들
-- `pnpm collector` — Collector 단독 실행
+```bash
+pnpm -C packages/collector verify:helper:darwin
+```
 
-### 데이터베이스 스키마 요약
+## 디렉터리 역할
 
-`activity_log` 테이블 컬럼: `id`, `timestamp`, `app_name`, `window_title`, `display_id`, `is_active`, `clicks`, `keypress`, `created_at`.
+```text
+apps/
+  electron/   Electron main/preload, IPC bridge, app icon lookup
+  renderer/   React UI, pages/widgets/entities/shared 구조
+packages/
+  shared/     IPC 채널과 공유 타입
+  db/         SQLite 연결, Drizzle schema, query helper
+  collector/  활성 창/입력/display 수집, collector HTTP API
+docs/         AI/개발 규칙과 프로젝트 문서
+data/         로컬 SQLite 파일 보관(ignore 대상)
+```
 
-### 로드맵 체크리스트
+## 데이터 흐름
 
-- Weekly 분석, 파일·탭 상세 분석, 집중 점수, AI 회고, Git 연동, 설정 고도화, Auto-update 등은 추후 작업.
+```text
+collector loop
+  -> packages/db insertActivity
+  -> local SQLite
+  -> collector HTTP API (/logs, /health)
+  -> Electron main IPC handler
+  -> preload window.api
+  -> renderer hooks/pages
+```
 
-### 개인정보 보호
+Renderer는 DB 파일이나 collector 내부 구현을 직접 읽지 않는다. Renderer에서 필요한 데이터는 `window.api`와 shared IPC 타입을 통해 받는다.
 
-- 모든 데이터는 로컬 SQLite에만 저장되고 외부 전송이 없다.
+## 모듈 경계
+
+- `packages/shared`
+  - IPC 채널, 요청/응답 타입 같은 계약만 둔다.
+  - Electron, renderer, db, collector 구현에 의존하지 않는다.
+- `packages/db`
+  - SQLite schema/query만 담당한다.
+  - Electron/renderer UI 로직을 import하지 않는다.
+- `packages/collector`
+  - activity 수집, input/display backend, collector HTTP API를 담당한다.
+  - renderer UI를 import하지 않는다.
+  - native/optional dependency는 실패해도 앱 전체가 죽지 않도록 동적 import와 상태 보고를 사용한다.
+- `apps/electron`
+  - BrowserWindow, preload, IPC handler, OS integration을 담당한다.
+  - renderer 컴포넌트를 import하지 않는다.
+- `apps/renderer`
+  - React UI와 화면 상태만 담당한다.
+  - DB/collector 패키지 내부를 직접 import하지 않는다.
+
+## Renderer 작성 규칙
+
+- `app/`: 앱 조립, provider, 전역 navigation
+- `pages/`: 라우트/탭 단위 화면 조합
+- `widgets/`: 화면 안의 큰 UI 블록
+- `entities/`: activity 같은 도메인 타입과 순수 계산 로직
+- `shared/`: 범용 UI, 범용 util
+
+권장 방향:
+
+```text
+app -> pages -> widgets -> entities -> shared
+```
+
+- page는 상태를 조합하고 widget에 props를 내려준다.
+- widget은 page 내부 구현을 import하지 않는다.
+- 테스트 가능한 계산 로직은 component 내부보다 `entities/*/lib` 같은 순수 함수로 둔다.
+- 실제 데이터 없음, 로딩, 에러, 목업 상태를 UI에서 구분한다.
+
+## Collector 작성 규칙
+
+- 1초에 1회 insert를 유지한다.
+- tick은 중복 실행되지 않아야 한다.
+- input/display backend 실패는 process crash 대신 `/health` 상태로 보고한다.
+- macOS helper binary를 변경하면 source와 binary 일치 검증을 실행한다.
+- Windows/macOS 차이는 platform backend로 분리하고, 임시 fallback은 상태 메시지에 명확히 남긴다.
+
+## DB 작성 규칙
+
+- SQLite는 WAL 모드를 사용한다.
+- 날짜 조회는 사용자가 보는 로컬 날짜 기준으로 처리한다.
+- schema 변경은 query와 테스트를 함께 검토한다.
+- renderer에서 DB를 직접 import하지 않는다.
+
+## 테스트와 완료 기준
+
+작업 완료 전 기본 검증:
+
+```bash
+pnpm check
+pnpm build
+```
+
+변경 유형별 추가 기준:
+
+- DB/query/date 변경: unit test 추가 또는 갱신
+- renderer 계산 로직 변경: 순수 함수 테스트 추가 또는 갱신
+- Electron IPC 변경: shared IPC 타입, preload, renderer global type 동시 갱신
+- collector/native 변경: health 상태와 fallback 동작 확인
+- macOS helper source 변경: `pnpm -C packages/collector verify:helper:darwin`
+
+## 커밋 규칙
+
+- [docs/commit-convention.md](./docs/commit-convention.md)를 따른다.
+- 한 커밋에는 하나의 의도만 담는다.
+- 기능, 리팩터링, 문서, 테스트, 설정 변경을 불필요하게 섞지 않는다.
+- 커밋 전 `git diff --stat`과 `git diff --cached --stat`으로 범위를 확인한다.
+
+## AI 작업 방식
+
+큰 작업은 바로 구현하지 않는다.
+
+```text
+탐색
+-> 영향 범위 분석
+-> 구현 계획
+-> 사용자 승인
+-> 구현
+-> 자동 검증
+-> 변경 요약
+```
+
+반복해서 틀리는 부분은 프롬프트로만 보정하지 않는다. 다음 중 하나로 레포에 남긴다.
+
+- `AGENTS.md` 또는 `docs/` 문서 보강
+- 테스트 추가
+- TypeScript 타입 강화
+- lint/boundary rule 추가
+- 모듈 구조 개선
+
+## 현재 주의점
+
+- `pnpm lint`는 아직 실질적인 품질 게이트가 아닐 수 있다. lint 작업을 하기 전까지는 `pnpm check`와 `pnpm build`를 기본 검증으로 본다.
+- [TODO.md](./TODO.md)는 현재 미추적 파일일 수 있으므로, 명시 요청 전에는 커밋에 포함하지 않는다.
+- 빌드 산출물, SQLite 파일, `node_modules`는 커밋하지 않는다.
