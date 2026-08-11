@@ -66,6 +66,11 @@ const missingBundleApps = new Set<string>();
 let inputHelperProcess: ReturnType<typeof spawn> | null = null;
 let inputBackend = "noop";
 let inputBackendError: string | null = null;
+let isTickRunning = false;
+let skippedTicks = 0;
+let lastTickAt: string | null = null;
+let lastTickDurationMs: number | null = null;
+let lastTickError: string | null = null;
 
 async function setupInputHooks() {
   if (process.platform !== "darwin") {
@@ -236,6 +241,28 @@ async function tick() {
   keypress = 0;
 }
 
+async function runTickOnce() {
+  if (isTickRunning) {
+    skippedTicks += 1;
+    console.warn("[collector] skipped overlapping tick", { skippedTicks });
+    return;
+  }
+
+  isTickRunning = true;
+  const startedAt = Date.now();
+  try {
+    await tick();
+    lastTickAt = new Date().toISOString();
+    lastTickError = null;
+  } catch (err) {
+    lastTickError = formatError(err);
+    console.error("[collector] tick failed", err);
+  } finally {
+    lastTickDurationMs = Date.now() - startedAt;
+    isTickRunning = false;
+  }
+}
+
 /**
  * bundleId 기준으로 Spotlight/폴더 스캔을 수행해 대표 앱 경로를 캐시한다.
  */
@@ -329,7 +356,7 @@ async function main() {
   });
   // 루프 ≤ 5ms/틱 유지: 실제 작업은 DB insert 1초/회
   setInterval(() => {
-    void tick();
+    void runTickOnce();
   }, 1000);
   startApiServer();
   // 프로세스 유지
@@ -379,6 +406,11 @@ function getHealthPayload() {
     inputBackendError,
     pid: process.pid,
     uptimeSeconds: Math.round(process.uptime()),
+    tickRunning: isTickRunning,
+    skippedTicks,
+    lastTickAt,
+    lastTickDurationMs,
+    lastTickError,
     timestamp: new Date().toISOString(),
   };
 }

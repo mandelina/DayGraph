@@ -32,7 +32,10 @@ export function SettingsPage() {
           lastSync: getLastStatusLabel(collectorStatus),
           inputBackend: collectorStatus?.inputBackend ?? "unknown",
           error:
-            collectorStatus?.error ?? collectorStatus?.inputBackendError ?? null,
+            collectorStatus?.error ??
+            collectorStatus?.inputBackendError ??
+            collectorStatus?.lastTickError ??
+            null,
         }}
       />
     </>
@@ -62,6 +65,11 @@ function useCollectorStatus() {
               inputBackendError: null,
               pid: null,
               uptimeSeconds: null,
+              tickRunning: false,
+              skippedTicks: 0,
+              lastTickAt: null,
+              lastTickDurationMs: null,
+              lastTickError: null,
               timestamp: new Date().toISOString(),
               error: err instanceof Error ? err.message : String(err),
             });

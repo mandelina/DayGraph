@@ -239,6 +239,11 @@ async function getCollectorStatus(): Promise<CollectorStatusResponse> {
       inputBackendError: payload.inputBackendError ?? null,
       pid: payload.pid ?? null,
       uptimeSeconds: payload.uptimeSeconds ?? null,
+      tickRunning: payload.tickRunning ?? false,
+      skippedTicks: payload.skippedTicks ?? 0,
+      lastTickAt: payload.lastTickAt ?? null,
+      lastTickDurationMs: payload.lastTickDurationMs ?? null,
+      lastTickError: payload.lastTickError ?? null,
       timestamp: payload.timestamp ?? new Date().toISOString(),
       error: null,
     };
@@ -252,6 +257,11 @@ async function getCollectorStatus(): Promise<CollectorStatusResponse> {
       inputBackendError: null,
       pid: null,
       uptimeSeconds: null,
+      tickRunning: false,
+      skippedTicks: 0,
+      lastTickAt: null,
+      lastTickDurationMs: null,
+      lastTickError: null,
       timestamp: new Date().toISOString(),
       error: formatError(err),
     };

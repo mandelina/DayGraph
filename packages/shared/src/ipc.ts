@@ -36,6 +36,11 @@ export type CollectorStatusResponse = {
   inputBackendError: string | null
   pid: number | null
   uptimeSeconds: number | null
+  tickRunning: boolean
+  skippedTicks: number
+  lastTickAt: string | null
+  lastTickDurationMs: number | null
+  lastTickError: string | null
   timestamp: string
   error: string | null
 }
