@@ -174,23 +174,20 @@ When adding or changing IPC:
 DB/query/date changes:
 
 ```bash
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 Collector/native changes:
 
 ```bash
-pnpm check
-pnpm build
+pnpm verify
 pnpm -C packages/collector verify:helper:darwin
 ```
 
 Renderer-only UI logic:
 
 ```bash
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 Document-only changes may skip runtime verification, but the changed links should be checked.

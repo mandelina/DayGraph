@@ -52,10 +52,12 @@ pnpm dev
 pnpm collector
 pnpm check
 pnpm build
+pnpm verify
 ```
 
 - `pnpm check`: typecheck + unit test
 - `pnpm build`: renderer + Electron production build
+- `pnpm verify`: check + build
 - native helper 변경 시 추가 검증:
 
 ```bash
@@ -148,8 +150,7 @@ app -> pages -> widgets -> entities -> shared
 작업 완료 전 기본 검증:
 
 ```bash
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 변경 유형별 추가 기준:

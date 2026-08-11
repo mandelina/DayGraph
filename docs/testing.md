@@ -11,14 +11,14 @@ AI 작업은 이 문서를 기준으로 검증 범위를 먼저 정하고, 작�
 모든 코드 변경 후 기본으로 실행한다.
 
 ```bash
-pnpm check
-pnpm build
+pnpm verify
 ```
 
 현재 의미:
 
 - `pnpm check`: TypeScript typecheck + Vitest unit test
 - `pnpm build`: renderer build + Electron build
+- `pnpm verify`: `pnpm check && pnpm build`
 
 문서만 변경한 경우에는 런타임 검증을 생략할 수 있다. 단, 링크와 파일 경로는 직접 확인한다.
 
@@ -35,8 +35,7 @@ pnpm build
 
 코드 변경 Done:
 
-- `pnpm check` 통과
-- `pnpm build` 통과
+- `pnpm verify` 통과
 - 변경된 pure logic에 테스트가 있거나 기존 테스트가 갱신됨
 - IPC/API shape 변경 시 shared type과 consumer가 함께 갱신됨
 
@@ -50,13 +49,13 @@ pnpm build
 
 | Change type | Required verification |
 | --- | --- |
-| Renderer UI only | `pnpm check`, `pnpm build` |
-| Renderer pure logic | `pnpm check`, `pnpm build`, unit test 추가/갱신 |
-| DB schema/query/date | `pnpm check`, `pnpm build`, query/date unit test 추가/갱신 |
-| Electron IPC | `pnpm check`, `pnpm build`, shared/preload/global type 확인 |
-| Collector loop/backend | `pnpm check`, `pnpm build`, `/health` status 영향 확인 |
-| macOS helper source/binary | `pnpm check`, `pnpm build`, `pnpm -C packages/collector verify:helper:darwin` |
-| Package/dependency | `pnpm install --lockfile-only` 또는 의존성 명령 후 `pnpm check`, `pnpm build` |
+| Renderer UI only | `pnpm verify` |
+| Renderer pure logic | `pnpm verify`, unit test 추가/갱신 |
+| DB schema/query/date | `pnpm verify`, query/date unit test 추가/갱신 |
+| Electron IPC | `pnpm verify`, shared/preload/global type 확인 |
+| Collector loop/backend | `pnpm verify`, `/health` status 영향 확인 |
+| macOS helper source/binary | `pnpm verify`, `pnpm -C packages/collector verify:helper:darwin` |
+| Package/dependency | `pnpm install --lockfile-only` 또는 의존성 명령 후 `pnpm verify` |
 | Docs only | 링크 확인, 필요 시 `pnpm check` |
 
 ## Unit Test Targets

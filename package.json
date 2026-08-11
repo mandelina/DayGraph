@@ -15,6 +15,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm test",
+    "verify": "pnpm check && pnpm build",
     "format": "pnpm -r format",
     "lint": "pnpm -r lint",
     "collector": "pnpm -C packages/collector start"
