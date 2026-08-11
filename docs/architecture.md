@@ -194,7 +194,5 @@ Document-only changes may skip runtime verification, but the changed links shoul
 
 ## Known Architecture Debt
 
-- `packages/collector/src/index.ts` still contains several responsibilities and should be split into smaller modules.
-- `pnpm lint` is not yet a real architecture gate.
 - Weekly, Insights, and parts of Settings still use mock data.
 - README may lag behind implementation details and should be kept aligned with this document.
