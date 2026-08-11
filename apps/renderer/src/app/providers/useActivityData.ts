@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  ActivityLoadState,
   AppActivity,
   TimelineSlice,
   TimelineBucket,
@@ -18,6 +19,9 @@ type ActivityData = {
   todayStats: AppActivity[];
   timelineSlices: TimelineSlice[];
   timelineBuckets: TimelineBucket[];
+  loadState: ActivityLoadState;
+  isUsingMockData: boolean;
+  errorMessage: string | null;
 };
 
 /**
@@ -26,8 +30,26 @@ type ActivityData = {
  */
 export function useActivityData(): ActivityData {
   const [rows, setRows] = useState<Activity[]>([]);
+  const [loadState, setLoadState] = useState<ActivityLoadState>(
+    shouldUseMockData() ? "mock" : "loading",
+  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (shouldUseMockData()) {
+      setRows([]);
+      setLoadState("mock");
+      setErrorMessage(null);
+      return;
+    }
+
+    if (!window.api?.queryDay) {
+      setRows([]);
+      setLoadState("mock");
+      setErrorMessage("Electron API unavailable; using mock data.");
+      return;
+    }
+
     const todayISO = formatLocalDateISO();
     let disposed = false;
 
@@ -37,14 +59,26 @@ export function useActivityData(): ActivityData {
         ?.then((res: unknown) => {
           if (!Array.isArray(res)) {
             console.warn("[ActivityData] queryDay malformed response", res);
-            if (!disposed) setRows([]);
+            if (!disposed) {
+              setRows([]);
+              setLoadState("error");
+              setErrorMessage("Collector returned malformed activity data.");
+            }
             return;
           }
-          if (!disposed) setRows(res as Activity[]);
+          if (!disposed) {
+            setRows(res as Activity[]);
+            setLoadState(res.length > 0 ? "ready" : "empty");
+            setErrorMessage(null);
+          }
         })
         .catch((err) => {
           console.error("[ActivityData] queryDay failed", err);
-          if (!disposed) setRows([]);
+          if (!disposed) {
+            setRows([]);
+            setLoadState("error");
+            setErrorMessage(formatError(err));
+          }
         });
     };
 
@@ -60,21 +94,38 @@ export function useActivityData(): ActivityData {
   const fallbackActivities = useMemo(() => generateMockActivities(), []);
 
   const todayStats = useMemo(() => {
-    const source = rows.length > 0 ? rows : fallbackActivities;
+    const source = loadState === "mock" ? fallbackActivities : rows;
     return summarizeByApp(source);
-  }, [rows, fallbackActivities]);
+  }, [rows, fallbackActivities, loadState]);
 
   const timelineSlices = useMemo(() => {
-    const source = rows.length > 0 ? rows : fallbackActivities;
+    const source = loadState === "mock" ? fallbackActivities : rows;
     return buildTimelineSlices(source);
-  }, [rows, fallbackActivities]);
+  }, [rows, fallbackActivities, loadState]);
 
   const timelineBuckets = useMemo(
     () => bucketizeTimeline(timelineSlices),
     [timelineSlices],
   );
 
-  return { activities: rows, todayStats, timelineSlices, timelineBuckets };
+  return {
+    activities: rows,
+    todayStats,
+    timelineSlices,
+    timelineBuckets,
+    loadState,
+    isUsingMockData: loadState === "mock",
+    errorMessage,
+  };
+}
+
+function shouldUseMockData() {
+  return import.meta.env.VITE_USE_MOCK === "1";
+}
+
+function formatError(err: unknown) {
+  if (err instanceof Error) return err.message;
+  return String(err);
 }
 
 /**

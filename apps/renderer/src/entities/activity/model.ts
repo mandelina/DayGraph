@@ -10,6 +10,8 @@ export type Activity = {
   keypress: number;
 };
 
+export type ActivityLoadState = "loading" | "ready" | "empty" | "error" | "mock";
+
 export type AppActivity = {
   appName: string;
   activeSeconds: number;

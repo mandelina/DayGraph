@@ -11,7 +11,7 @@ contextBridge.exposeInMainWorld('api', {
 // 타입 선언을 위해 글로벌 보강(JSDoc)
 declare global {
   interface Window {
-    api: {
+    api?: {
       queryDay: (dateISO: string) => Promise<unknown>
       getAppIcon: (payload: { appPath?: string | null; bundleId?: string | null }) => Promise<unknown>
     }

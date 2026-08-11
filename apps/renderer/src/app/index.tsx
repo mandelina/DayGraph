@@ -14,7 +14,14 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("theme") as "dark" | "light") || "dark";
   });
-  const { todayStats, timelineSlices, timelineBuckets } = useActivityData();
+  const {
+    todayStats,
+    timelineSlices,
+    timelineBuckets,
+    loadState,
+    isUsingMockData,
+    errorMessage,
+  } = useActivityData();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -41,9 +48,22 @@ export default function App() {
         <div className="flex justify-end">
           <ThemeToggle theme={theme} setTheme={setTheme} />
         </div>
-        {activeTab === "Today" && <TodayPage apps={todayStats} />}
+        {activeTab === "Today" && (
+          <TodayPage
+            apps={todayStats}
+            loadState={loadState}
+            isUsingMockData={isUsingMockData}
+            errorMessage={errorMessage}
+          />
+        )}
         {activeTab === "Timeline" && (
-          <TimelinePage slices={timelineSlices} buckets={timelineBuckets} />
+          <TimelinePage
+            slices={timelineSlices}
+            buckets={timelineBuckets}
+            loadState={loadState}
+            isUsingMockData={isUsingMockData}
+            errorMessage={errorMessage}
+          />
         )}
         {activeTab === "Weekly" && <WeeklyPage />}
         {activeTab === "Insights" && <InsightsPage />}

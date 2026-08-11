@@ -7,7 +7,7 @@ import type {
 
 declare global {
   interface Window {
-    api: {
+    api?: {
       queryDay: (dateISO: string) => Promise<QueryDayResponse>
       getAppIcon: (payload: GetAppIconRequest) => Promise<GetAppIconResponse>
     }
