@@ -11,7 +11,10 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { IPC } from "@daygraph/shared/ipc";
+import {
+  IPC,
+  type CollectorStatusResponse,
+} from "@daygraph/shared/ipc";
 
 // 개발 디버깅: Electron의 Chromium 원격 디버깅 포트를 활성화해 VS Code가 렌더러에 attach 가능하도록 함
 // mac/윈도우 공통. dev 모드에서만 설정
@@ -166,6 +169,10 @@ ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
   }
 });
 
+ipcMain.handle(IPC.channels.getCollectorStatus, async () => {
+  return getCollectorStatus();
+});
+
 ipcMain.handle(
   IPC.channels.getAppIcon,
   async (
@@ -211,6 +218,52 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+async function getCollectorStatus(): Promise<CollectorStatusResponse> {
+  const healthUrl = new URL("/health", collectorBaseUrl).toString();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1000);
+  try {
+    const res = await fetch(healthUrl, {
+      headers: { accept: "application/json" },
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`collector health ${res.status}`);
+    const payload = (await res.json()) as Partial<CollectorStatusResponse>;
+    return {
+      ok: payload.ok === true,
+      reachable: true,
+      url: healthUrl,
+      platform: payload.platform ?? null,
+      inputBackend: payload.inputBackend ?? null,
+      inputBackendError: payload.inputBackendError ?? null,
+      pid: payload.pid ?? null,
+      uptimeSeconds: payload.uptimeSeconds ?? null,
+      timestamp: payload.timestamp ?? new Date().toISOString(),
+      error: null,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      reachable: false,
+      url: healthUrl,
+      platform: null,
+      inputBackend: null,
+      inputBackendError: null,
+      pid: null,
+      uptimeSeconds: null,
+      timestamp: new Date().toISOString(),
+      error: formatError(err),
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function formatError(err: unknown) {
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
 
 async function getFileMtime(target: string) {
   try {

@@ -342,6 +342,11 @@ function startApiServer() {
   const host = process.env.COLLECTOR_API_HOST || "127.0.0.1";
   const server = createServer(async (req, res) => {
     const url = parse(req.url || "", true);
+    if (req.method === "GET" && url.pathname === "/health") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(getHealthPayload()));
+      return;
+    }
     if (req.method === "GET" && url.pathname === "/logs") {
       const date =
         typeof url.query.date === "string"
@@ -364,6 +369,18 @@ function startApiServer() {
   server.listen(port, host, () => {
     console.log(`[collector] api listening at http://${host}:${port}`);
   });
+}
+
+function getHealthPayload() {
+  return {
+    ok: true,
+    platform: process.platform,
+    inputBackend,
+    inputBackendError,
+    pid: process.pid,
+    uptimeSeconds: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+  };
 }
 
 function formatLocalDateISO(date = new Date()) {

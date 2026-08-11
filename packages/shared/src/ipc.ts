@@ -2,7 +2,8 @@
 export const IPC = {
   channels: {
     queryDay: 'daygraph:query-day',
-    getAppIcon: 'daygraph:get-app-icon'
+    getAppIcon: 'daygraph:get-app-icon',
+    getCollectorStatus: 'daygraph:get-collector-status'
   }
 } as const
 
@@ -25,3 +26,16 @@ export type GetAppIconRequest = {
   bundleId?: string | null
 }
 export type GetAppIconResponse = string | null
+
+export type CollectorStatusResponse = {
+  ok: boolean
+  reachable: boolean
+  url: string
+  platform: string | null
+  inputBackend: string | null
+  inputBackendError: string | null
+  pid: number | null
+  uptimeSeconds: number | null
+  timestamp: string
+  error: string | null
+}

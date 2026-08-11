@@ -5,7 +5,8 @@ import { IPC } from '@daygraph/shared/ipc'
 contextBridge.exposeInMainWorld('api', {
   queryDay: (dateISO: string) => ipcRenderer.invoke(IPC.channels.queryDay, dateISO),
   getAppIcon: (payload: { appPath?: string | null; bundleId?: string | null }) =>
-    ipcRenderer.invoke(IPC.channels.getAppIcon, payload)
+    ipcRenderer.invoke(IPC.channels.getAppIcon, payload),
+  getCollectorStatus: () => ipcRenderer.invoke(IPC.channels.getCollectorStatus)
 })
 
 // 타입 선언을 위해 글로벌 보강(JSDoc)
@@ -14,6 +15,7 @@ declare global {
     api?: {
       queryDay: (dateISO: string) => Promise<unknown>
       getAppIcon: (payload: { appPath?: string | null; bundleId?: string | null }) => Promise<unknown>
+      getCollectorStatus: () => Promise<unknown>
     }
   }
 }
