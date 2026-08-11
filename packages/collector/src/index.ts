@@ -26,8 +26,11 @@ type ActiveWindowInfo = {
   path: string | null;
   bundleId: string | null;
   title: string;
-  bounds?: { x: number; y: number; width: number; height: number } | undefined;
+  bounds?: WindowBounds | undefined;
 };
+
+type WindowBounds = { x: number; y: number; width: number; height: number };
+type MonitorInfo = { id: number; bounds: WindowBounds };
 
 async function getActiveWindow(): Promise<ActiveWindowInfo> {
   try {
@@ -39,9 +42,7 @@ async function getActiveWindow(): Promise<ActiveWindowInfo> {
       path: res.owner?.path ?? null,
       bundleId: res.owner?.bundleId ?? null,
       title: res.title ?? "Unknown",
-      bounds: res.bounds as
-        | { x: number; y: number; width: number; height: number }
-        | undefined,
+      bounds: res.bounds as WindowBounds | undefined,
     };
   } catch (e) {
     console.log("res error : ", e);
@@ -66,6 +67,10 @@ const missingBundleApps = new Set<string>();
 let inputHelperProcess: ReturnType<typeof spawn> | null = null;
 let inputBackend = "noop";
 let inputBackendError: string | null = null;
+let stopInputBackend: (() => void) | null = null;
+let displayBackend = "coordinate-fallback";
+let displayBackendError: string | null = null;
+let monitorCache: { loadedAt: number; monitors: MonitorInfo[] } | null = null;
 let isTickRunning = false;
 let skippedTicks = 0;
 let lastTickAt: string | null = null;
@@ -74,11 +79,9 @@ let lastTickError: string | null = null;
 
 async function setupInputHooks() {
   if (process.platform !== "darwin") {
-    inputBackendError = `input helper unsupported on ${process.platform}`;
-    console.warn("[collector][input]", inputBackendError);
+    await setupIohookInputHooks();
     return;
   }
-
   try {
     const binary = await getPrebuiltInputHelperPath();
     await startMacInputHelper(binary);
@@ -89,6 +92,41 @@ async function setupInputHooks() {
     inputBackend = "noop";
     inputBackendError = formatError(err);
     console.error("[collector][input] helper setup failed", err);
+  }
+}
+
+async function setupIohookInputHooks() {
+  try {
+    const mod = await importOptionalModule<any>("iohook");
+    const iohook = mod.default ?? mod;
+    if (
+      typeof iohook.on !== "function" ||
+      typeof iohook.start !== "function"
+    ) {
+      throw new Error("iohook module does not expose on/start");
+    }
+
+    iohook.on("mousedown", () => {
+      clicks += 1;
+    });
+    iohook.on("keydown", () => {
+      keypress += 1;
+    });
+    iohook.start();
+    stopInputBackend = () => {
+      if (typeof iohook.stop === "function") {
+        iohook.stop();
+      }
+    };
+    inputBackend = `iohook-${process.platform}`;
+    inputBackendError = null;
+    console.log("[collector][input] backend ready", inputBackend);
+  } catch (err) {
+    inputBackend = "noop";
+    inputBackendError = `iohook unavailable on ${process.platform}: ${formatError(
+      err
+    )}`;
+    console.warn("[collector][input]", inputBackendError);
   }
 }
 
@@ -171,6 +209,10 @@ async function startMacInputHelper(binaryPath: string) {
 }
 
 function stopInputHooks() {
+  if (stopInputBackend) {
+    stopInputBackend();
+    stopInputBackend = null;
+  }
   if (inputHelperProcess && !inputHelperProcess.killed) {
     inputHelperProcess.kill();
   }
@@ -181,12 +223,96 @@ function formatError(err: unknown) {
   return String(err);
 }
 
-function calcDisplayId(
-  bounds?: { x: number; y: number; width: number; height: number } | undefined
-) {
-  // 간단히 좌표 기준으로 가짜 디스플레이 ID 추정 (0 또는 1)
+async function calcDisplayId(bounds?: WindowBounds | undefined) {
   if (!bounds) return null;
+  const monitors = await getMonitors();
+  if (monitors.length > 0) {
+    const center = {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2,
+    };
+    const match = monitors.find((monitor) =>
+      pointInBounds(center, monitor.bounds)
+    );
+    if (match) return match.id;
+  }
+  // 모니터 정보를 얻지 못하면 기존 좌표 기준 추정을 유지한다.
   return bounds.x < 1920 ? 0 : 1;
+}
+
+async function getMonitors() {
+  const now = Date.now();
+  if (monitorCache && now - monitorCache.loadedAt < 5000) {
+    return monitorCache.monitors;
+  }
+
+  try {
+    const mod = await importOptionalModule<any>("node-window-manager");
+    const manager = mod.windowManager ?? mod.default?.windowManager;
+    const rawMonitors =
+      typeof manager?.getMonitors === "function"
+        ? manager.getMonitors()
+        : typeof manager?.getDisplays === "function"
+        ? manager.getDisplays()
+        : [];
+    const monitors = normalizeMonitors(rawMonitors);
+    monitorCache = { loadedAt: now, monitors };
+    if (monitors.length > 0) {
+      displayBackend = "node-window-manager";
+      displayBackendError = null;
+    }
+    return monitors;
+  } catch (err) {
+    displayBackend = "coordinate-fallback";
+    displayBackendError = formatError(err);
+    monitorCache = { loadedAt: now, monitors: [] };
+    return [];
+  }
+}
+
+function normalizeMonitors(rawMonitors: unknown): MonitorInfo[] {
+  if (!Array.isArray(rawMonitors)) return [];
+  return rawMonitors
+    .map((monitor, index) => {
+      const item = monitor as any;
+      const source = item.bounds ?? item.workArea ?? item;
+      const bounds = normalizeBounds(source);
+      if (!bounds) return null;
+      return {
+        id: Number(item.id ?? item.displayId ?? index),
+        bounds,
+      };
+    })
+    .filter((monitor): monitor is MonitorInfo => monitor !== null);
+}
+
+function normalizeBounds(value: unknown): WindowBounds | null {
+  const source = value as Partial<WindowBounds>;
+  const x = Number(source.x);
+  const y = Number(source.y);
+  const width = Number(source.width);
+  const height = Number(source.height);
+  if ([x, y, width, height].some((item) => Number.isNaN(item))) {
+    return null;
+  }
+  return { x, y, width, height };
+}
+
+function pointInBounds(
+  point: { x: number; y: number },
+  bounds: WindowBounds
+) {
+  return (
+    point.x >= bounds.x &&
+    point.x < bounds.x + bounds.width &&
+    point.y >= bounds.y &&
+    point.y < bounds.y + bounds.height
+  );
+}
+
+async function importOptionalModule<T>(specifier: string): Promise<T> {
+  const dynamicImport = new Function("specifier", "return import(specifier)");
+  return dynamicImport(specifier) as Promise<T>;
 }
 
 async function tick() {
@@ -231,7 +357,7 @@ async function tick() {
     app_path: resolvedPath,
     bundle_id: win.bundleId ?? null,
     window_title: win.title,
-    display_id: calcDisplayId(win.bounds),
+    display_id: await calcDisplayId(win.bounds),
     is_active: true,
     clicks,
     keypress,
@@ -404,6 +530,8 @@ function getHealthPayload() {
     platform: process.platform,
     inputBackend,
     inputBackendError,
+    displayBackend,
+    displayBackendError,
     pid: process.pid,
     uptimeSeconds: Math.round(process.uptime()),
     tickRunning: isTickRunning,

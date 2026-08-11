@@ -31,9 +31,11 @@ export function SettingsPage() {
           collector: getCollectorLabel(collectorStatus),
           lastSync: getLastStatusLabel(collectorStatus),
           inputBackend: collectorStatus?.inputBackend ?? "unknown",
+          displayBackend: collectorStatus?.displayBackend ?? "unknown",
           error:
             collectorStatus?.error ??
             collectorStatus?.inputBackendError ??
+            collectorStatus?.displayBackendError ??
             collectorStatus?.lastTickError ??
             null,
         }}
@@ -63,6 +65,8 @@ function useCollectorStatus() {
               platform: null,
               inputBackend: null,
               inputBackendError: null,
+              displayBackend: null,
+              displayBackendError: null,
               pid: null,
               uptimeSeconds: null,
               tickRunning: false,

@@ -4,6 +4,7 @@ type Props = {
     lastSync: string;
     autoUpdate: boolean;
     inputBackend: string;
+    displayBackend: string;
     error: string | null;
   };
 };
@@ -20,6 +21,7 @@ export function SystemStatusPanel({ status }: Props) {
           value={status.autoUpdate ? "Enabled" : "Disabled"}
         />
         <StatusRow label="Input backend" value={status.inputBackend} />
+        <StatusRow label="Display backend" value={status.displayBackend} />
         {status.error ? <StatusRow label="상태 메시지" value={status.error} /> : null}
       </div>
     </section>
