@@ -18,6 +18,7 @@
 
 ## 먼저 읽을 문서
 
+- [docs/architecture.md](./docs/architecture.md): 프로세스, 데이터 흐름, 모듈 책임
 - [docs/commit-convention.md](./docs/commit-convention.md): 커밋 메시지와 최소 단위 커밋 규칙
 - [README.md](./README.md): 제품 개요와 실행 방법
 - [TODO.md](./TODO.md): 현재 작업 후보와 사용자 메모
