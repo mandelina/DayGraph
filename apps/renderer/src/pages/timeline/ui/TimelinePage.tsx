@@ -1,8 +1,15 @@
+import { useMemo, useState } from "react";
 import {
   ActivityLoadState,
   TimelineSlice,
   TimelineBucket,
 } from "../../../entities/activity/model";
+import { bucketizeTimeline } from "../../../app/providers/useActivityData";
+import {
+  filterTimelineSlices,
+  getTimelineFilterCounts,
+} from "../../../entities/activity/lib/filterTimeline";
+import type { TimelineFilterMode } from "../../../entities/activity/model";
 import { TimelineFilters } from "../../../widgets/timeline/Filters";
 import { TimelineStrip } from "../../../widgets/timeline/Strip";
 import { TimelineSessionsList } from "../../../widgets/timeline/SessionsList";
@@ -22,6 +29,18 @@ export function TimelinePage({
   isUsingMockData,
   errorMessage,
 }: Props) {
+  const [activeFilter, setActiveFilter] =
+    useState<TimelineFilterMode>("all");
+  const filterCounts = useMemo(() => getTimelineFilterCounts(slices), [slices]);
+  const filteredSlices = useMemo(
+    () => filterTimelineSlices(slices, activeFilter),
+    [activeFilter, slices],
+  );
+  const filteredBuckets = useMemo(
+    () => (activeFilter === "all" ? buckets : bucketizeTimeline(filteredSlices)),
+    [activeFilter, buckets, filteredSlices],
+  );
+
   return (
     <>
       <header className="bg-accent text-foreground px-4 py-3 rounded-xl flex items-center justify-between">
@@ -41,10 +60,14 @@ export function TimelinePage({
         errorMessage={errorMessage}
       />
       <section className="bg-card rounded-xl p-4 space-y-4">
-        <TimelineFilters />
-        <TimelineStrip buckets={buckets} />
+        <TimelineFilters
+          activeFilter={activeFilter}
+          counts={filterCounts}
+          onChange={setActiveFilter}
+        />
+        <TimelineStrip buckets={filteredBuckets} />
       </section>
-      <TimelineSessionsList slices={slices} />
+      <TimelineSessionsList slices={filteredSlices} />
     </>
   );
 }

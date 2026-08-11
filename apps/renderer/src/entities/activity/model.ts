@@ -12,6 +12,8 @@ export type Activity = {
 
 export type ActivityLoadState = "loading" | "ready" | "empty" | "error" | "mock";
 
+export type TimelineFilterMode = "all" | "focused" | "hide-idle";
+
 export type AppActivity = {
   appName: string;
   activeSeconds: number;
