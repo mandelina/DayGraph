@@ -35,6 +35,8 @@ packages/shared
 - `packages/db`는 SQLite schema/query만 가진다.
 - Collector backend 실패는 UI에 직접 접근하지 않고 `/health`로 보고한다.
 
+일부 핵심 규칙은 root ESLint 설정에서 강제한다. 새 경계 규칙을 추가할 때는 `.eslintrc.cjs`와 이 문서를 함께 갱신한다.
+
 ## packages/shared
 
 Allowed:

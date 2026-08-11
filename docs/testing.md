@@ -16,9 +16,10 @@ pnpm verify
 
 현재 의미:
 
-- `pnpm check`: TypeScript typecheck + Vitest unit test
+- `pnpm lint`: ESLint boundary rules
+- `pnpm check`: ESLint + TypeScript typecheck + Vitest unit test
 - `pnpm build`: renderer build + Electron build
-- `pnpm verify`: `pnpm check && pnpm build`
+- `pnpm verify`: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`
 
 문서만 변경한 경우에는 런타임 검증을 생략할 수 있다. 단, 링크와 파일 경로는 직접 확인한다.
 

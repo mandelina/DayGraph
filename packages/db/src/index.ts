@@ -24,7 +24,6 @@ export function getDB() {
   // better-sqlite3는 네이티브 모듈이므로 Electron ABI에 맞춰 rebuild 필요
   // import 시점 크래시를 막기 위해 지연 로딩(require)로 전환
   const require = createRequire(import.meta.url);
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Database: any = require("better-sqlite3");
   const sqlite = new Database(file);
   sqlite.pragma("journal_mode = WAL"); // 성능/안정: WAL 모드

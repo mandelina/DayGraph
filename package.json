@@ -14,17 +14,19 @@
     "preview": "pnpm -C apps/electron preview",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "verify": "pnpm check && pnpm build",
     "format": "pnpm -r format",
-    "lint": "pnpm -r lint",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "collector": "pnpm -C packages/collector start"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@typescript-eslint/parser": "^7.18.0",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
+    "eslint": "^8.57.1",
     "typescript": "~5.4.5",
     "vitest": "^1.6.1"
   }

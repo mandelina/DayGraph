@@ -57,7 +57,8 @@ pnpm verify
 
 - `pnpm check`: typecheck + unit test
 - `pnpm build`: renderer + Electron production build
-- `pnpm verify`: check + build
+- `pnpm lint`: ESLint boundary rules
+- `pnpm verify`: lint + typecheck + test + build
 - native helper 변경 시 추가 검증:
 
 ```bash
@@ -192,6 +193,5 @@ pnpm verify
 
 ## 현재 주의점
 
-- `pnpm lint`는 아직 실질적인 품질 게이트가 아닐 수 있다. lint 작업을 하기 전까지는 `pnpm check`와 `pnpm build`를 기본 검증으로 본다.
 - [TODO.md](./TODO.md)는 현재 미추적 파일일 수 있으므로, 명시 요청 전에는 커밋에 포함하지 않는다.
 - 빌드 산출물, SQLite 파일, `node_modules`는 커밋하지 않는다.
