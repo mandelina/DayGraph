@@ -1,13 +1,22 @@
 import { NAV_ITEMS, NavItem } from "../../app/navigation";
+import type { AppActivity } from "../../entities/activity/model";
+import { AppIcon } from "./AppIcon";
 
 type Props = {
   active: NavItem;
   onSelect: (item: NavItem) => void;
   theme: "dark" | "light";
   setTheme: (value: "dark" | "light") => void;
+  workspaceApp?: AppActivity;
 };
 
-export function Sidebar({ active, onSelect, theme, setTheme }: Props) {
+export function Sidebar({
+  active,
+  onSelect,
+  theme,
+  setTheme,
+  workspaceApp,
+}: Props) {
   return (
     <>
       <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col gap-8 border-r border-border/70 bg-surfaceMuted/65 p-6 backdrop-blur-xl md:flex">
@@ -28,10 +37,28 @@ export function Sidebar({ active, onSelect, theme, setTheme }: Props) {
           <div className="text-[10px] font-black uppercase tracking-[0.18em] text-muted">
             Workspace
           </div>
-          <div className="mt-2 flex items-center gap-2 text-sm font-bold text-foreground">
-            <span className="h-2 w-2 rounded-full bg-success" aria-hidden />
-            Local / Private
-          </div>
+          <button
+            type="button"
+            aria-label="Open Today workspace"
+            onClick={() => onSelect("Today")}
+            className="mt-3 flex w-full items-center gap-3 rounded-xl text-left transition hover:opacity-80"
+          >
+            <AppIcon
+              appName={workspaceApp?.appName ?? "DayGraph"}
+              appPath={workspaceApp?.appPath}
+              bundleId={workspaceApp?.bundleId}
+              size={34}
+            />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold text-foreground">
+                {workspaceApp?.appName ?? "Local workspace"}
+              </span>
+              <span className="mt-1 flex items-center gap-1.5 text-[11px] text-muted">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" aria-hidden />
+                Local / Private
+              </span>
+            </span>
+          </button>
         </div>
         <nav className="space-y-2" aria-label="Primary navigation">
           {NAV_ITEMS.map((item) => (

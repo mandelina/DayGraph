@@ -69,13 +69,13 @@ export function TodayPage({
               label="Clicks"
               value={totalClicks}
               hint="마우스 상호작용"
-              tone="blue"
+              tone="neutral"
             />
             <MetricCard
               label="Keypress"
               value={totalKeypress}
               hint="키보드 상호작용"
-              tone="green"
+              tone="sage"
             />
           </section>
           <section className="grid gap-5 xl:grid-cols-5">

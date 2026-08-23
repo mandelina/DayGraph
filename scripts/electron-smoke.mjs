@@ -56,6 +56,7 @@ const result = await evaluate(`(async()=>{
       .every((key) => typeof window.api?.[key] === "function"),
     collector: false,
     todayThumbnails: false,
+    workspaceThumbnail: false,
     tabs: {},
   };
   const status = await window.api?.getCollectorStatus?.();
@@ -78,6 +79,8 @@ const result = await evaluate(`(async()=>{
       );
       checks.todayThumbnails =
         emptyToday || document.querySelectorAll("main img[alt]").length > 0;
+      checks.workspaceThumbnail =
+        emptyToday || document.querySelectorAll("aside img[alt]").length > 0;
     }
   }
   return { checks, status };

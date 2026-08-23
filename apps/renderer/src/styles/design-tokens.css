@@ -1,3 +1,4 @@
+/* DayGraph palette: ink, paper, clay, moss, and sand. */
 @theme {
   --color-surface: #171412;
   --color-surfaceMuted: #211c19;
@@ -8,7 +9,7 @@
   --color-primaryStrong: #b94e3b;
   --color-accent: #91ae9b;
   --color-accentSoft: #b5c8ba;
-  --color-info: #7fa3b8;
+  --color-info: #7f9b8c;
   --color-success: #8fac7f;
   --color-warning: #d0a064;
   --color-danger: #d47770;
@@ -50,7 +51,7 @@
     --color-primaryStrong: #a93d35;
     --color-accent: #315b4c;
     --color-accentSoft: #678475;
-    --color-info: #4d7187;
+    --color-info: #6f8d86;
     --color-success: #5d7b58;
     --color-warning: #a86e32;
     --color-danger: #b6443e;
@@ -112,12 +113,8 @@
     @apply bg-accent;
   }
 
-  .metric-card-blue .metric-card-dot {
-    @apply bg-info;
-  }
-
-  .metric-card-green .metric-card-dot {
-    @apply bg-success;
+  .metric-card-neutral .metric-card-dot {
+    @apply bg-accentSoft;
   }
 
   .status-banner {

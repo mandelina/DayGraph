@@ -22,8 +22,10 @@ export function AppIcon({ appName, appPath, bundleId, size = 32 }: Props) {
     }
     return null;
   });
+  const [iconFailed, setIconFailed] = useState(false);
 
   useEffect(() => {
+    setIconFailed(false);
     if (!cacheKey || (!appPath && !bundleId)) {
       setIcon(null);
       return;
@@ -52,15 +54,19 @@ export function AppIcon({ appName, appPath, bundleId, size = 32 }: Props) {
     };
   }, [appPath, bundleId, cacheKey]);
 
-  if (icon) {
+  if (icon && !iconFailed) {
     return (
       <img
         src={icon}
         alt={appName}
         width={size}
         height={size}
-        className="rounded-md shadow-sm object-cover"
+        className="rounded-md object-cover shadow-sm"
         draggable={false}
+        onError={() => {
+          if (cacheKey) iconCache.set(cacheKey, null);
+          setIconFailed(true);
+        }}
       />
     );
   }

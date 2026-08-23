@@ -12,17 +12,17 @@ export function TopAppHero({ app }: Props) {
     {
       label: "Active",
       value: app.activeSeconds * ACTIVITY_SCORE_WEIGHTS.active,
-      color: "bg-success",
+              color: "bg-accentSoft",
     },
     {
       label: "Clicks",
       value: app.clickCount * ACTIVITY_SCORE_WEIGHTS.clicks,
-      color: "bg-accent",
+              color: "bg-primary",
     },
     {
       label: "Keys",
       value: app.keypressCount * ACTIVITY_SCORE_WEIGHTS.keys,
-      color: "bg-info",
+              color: "bg-accent",
     },
   ];
   const total = segments.reduce((sum, seg) => sum + seg.value, 0) || 1;
