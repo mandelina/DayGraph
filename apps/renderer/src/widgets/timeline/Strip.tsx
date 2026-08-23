@@ -35,10 +35,12 @@ export function TimelineStrip({ buckets }: Props) {
             ? Math.min(bucket.share + 0.2, 0.95)
             : 0.25;
           const background = bucket.isMixed
-            ? "linear-gradient(180deg, rgba(148,163,184,0.35) 0%, rgba(100,116,139,0.45) 100%)"
-            : `linear-gradient(180deg, rgba(99,102,241,${opacity}) 0%, rgba(59,130,246,${
-                opacity - 0.2
-              }) 100%)`;
+            ? "linear-gradient(180deg, rgba(120,113,108,0.28) 0%, rgba(120,113,108,0.5) 100%)"
+            : `linear-gradient(180deg, color-mix(in srgb, var(--color-accent) ${Math.round(
+                opacity * 100,
+              )}%, transparent) 0%, color-mix(in srgb, var(--color-primary) ${Math.round(
+                Math.max(opacity - 0.18, 0.08) * 100,
+              )}%, transparent) 100%)`;
           const iconSize = bucket.isMixed ? 20 : 28;
           return (
             <div

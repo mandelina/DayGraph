@@ -1,19 +1,19 @@
 @theme {
-  --color-surface: #12100f;
-  --color-surfaceMuted: #1b1816;
-  --color-card: #211e1b;
-  --color-cardMuted: #2b2723;
-  --color-border: #3a342f;
-  --color-primary: #f6b56b;
-  --color-primaryStrong: #e68c45;
-  --color-accent: #8d7aff;
-  --color-accentSoft: #b3a8ff;
-  --color-info: #73c7e8;
-  --color-success: #71d6a4;
-  --color-warning: #f1a35b;
-  --color-danger: #f28a93;
-  --color-muted: #a9a09a;
-  --color-foreground: #f8f3ed;
+  --color-surface: #171412;
+  --color-surfaceMuted: #211c19;
+  --color-card: #28221f;
+  --color-cardMuted: #332b26;
+  --color-border: #473b34;
+  --color-primary: #d66a52;
+  --color-primaryStrong: #b94e3b;
+  --color-accent: #91ae9b;
+  --color-accentSoft: #b5c8ba;
+  --color-info: #7fa3b8;
+  --color-success: #8fac7f;
+  --color-warning: #d0a064;
+  --color-danger: #d47770;
+  --color-muted: #b7aaa0;
+  --color-foreground: #f5ede3;
 
   --font-sans: "Pretendard Variable", Inter, "Segoe UI", system-ui,
     -apple-system, sans-serif;
@@ -41,72 +41,51 @@
 
   [data-theme='light'] {
     color-scheme: light;
-    --color-surface: #f6f1eb;
-    --color-surfaceMuted: #eee6dd;
-    --color-card: #fffdf9;
-    --color-cardMuted: #f3ebe2;
-    --color-border: #e3d7ca;
-    --color-primary: #e8875d;
-    --color-primaryStrong: #c9633e;
-    --color-accent: #6857dc;
-    --color-accentSoft: #988cf0;
-    --color-info: #178cb6;
-    --color-success: #23875d;
-    --color-warning: #c86c19;
-    --color-danger: #c44d58;
-    --color-muted: #736860;
-    --color-foreground: #201b18;
+    --color-surface: #f5f1eb;
+    --color-surfaceMuted: #ebe5dd;
+    --color-card: #fffdfa;
+    --color-cardMuted: #f3eee7;
+    --color-border: #ded6cc;
+    --color-primary: #cc5146;
+    --color-primaryStrong: #a93d35;
+    --color-accent: #315b4c;
+    --color-accentSoft: #678475;
+    --color-info: #4d7187;
+    --color-success: #5d7b58;
+    --color-warning: #a86e32;
+    --color-danger: #b6443e;
+    --color-muted: #756e67;
+    --color-foreground: #211e1b;
   }
 }
 
 @layer components {
   .app-canvas {
-    background:
-      radial-gradient(circle at 92% 4%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 25rem),
-      radial-gradient(circle at 3% 94%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 28rem),
-      var(--color-surface);
+    background: var(--color-surface);
   }
 
   .surface-card {
-    @apply rounded-[1.35rem] border border-border/80 bg-card shadow-sm;
+    @apply rounded-2xl border border-border/80 bg-card shadow-sm;
   }
 
   .page-header {
-    @apply relative flex min-h-52 items-end justify-between gap-6 overflow-hidden rounded-[1.75rem] border px-6 py-7 sm:px-8;
-    box-shadow: 0 20px 60px color-mix(in srgb, var(--color-surface) 20%, transparent);
+    @apply relative flex min-h-44 items-end justify-between gap-6 overflow-hidden rounded-3xl border px-6 py-6 sm:px-8;
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--color-surface) 10%, transparent);
   }
 
   .page-header-warm {
     @apply border-primary/30 text-surface;
-    background: linear-gradient(135deg, var(--color-primary) 0%, #f2d2a4 58%, #f8e6d2 100%);
+    background: var(--color-primary);
   }
 
-  .page-header-violet {
-    @apply border-accent/40 text-foreground;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 88%, var(--color-surface)) 0%, #b9a9ff 100%);
+  .page-header-sage {
+    @apply border-accent/40 text-surface;
+    background: var(--color-accent);
   }
 
   .page-header-neutral {
     @apply border-border text-foreground;
-    background: linear-gradient(135deg, var(--color-cardMuted) 0%, var(--color-card) 100%);
-  }
-
-  .page-header-orbit {
-    @apply pointer-events-none absolute rounded-full border border-white/30;
-  }
-
-  .page-header-orbit-one {
-    right: -5rem;
-    top: -7rem;
-    width: 19rem;
-    height: 19rem;
-  }
-
-  .page-header-orbit-two {
-    right: 4rem;
-    top: -2rem;
-    width: 11rem;
-    height: 11rem;
+    background: var(--color-cardMuted);
   }
 
   .eyebrow {
@@ -118,7 +97,7 @@
   }
 
   .metric-card {
-    @apply min-h-28 rounded-[1.35rem] border border-border/80 bg-card p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5;
+    @apply min-h-28 rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5;
   }
 
   .metric-card-dot {
@@ -129,7 +108,7 @@
     @apply bg-primary;
   }
 
-  .metric-card-violet .metric-card-dot {
+  .metric-card-sage .metric-card-dot {
     @apply bg-accent;
   }
 

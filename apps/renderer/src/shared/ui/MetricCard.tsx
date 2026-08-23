@@ -2,7 +2,7 @@ type Props = {
   label: string;
   value: string | number;
   hint?: string;
-  tone?: "warm" | "violet" | "blue" | "green";
+  tone?: "warm" | "sage" | "blue" | "green";
 };
 
 export function MetricCard({ label, value, hint, tone = "warm" }: Props) {

@@ -20,16 +20,17 @@ export function Sidebar({ active, onSelect, theme, setTheme }: Props) {
               DayGraph
             </div>
             <div className="mt-1 text-xs leading-5 text-muted">
-              Active Window Intelligence
+              Local activity journal
             </div>
           </div>
         </div>
         <div className="rounded-2xl border border-border/70 bg-card/60 p-4">
           <div className="text-[10px] font-black uppercase tracking-[0.18em] text-muted">
-            Your workspace
+            Workspace
           </div>
-          <div className="mt-2 text-sm font-semibold text-foreground">
-            A calmer way to review your day.
+          <div className="mt-2 flex items-center gap-2 text-sm font-bold text-foreground">
+            <span className="h-2 w-2 rounded-full bg-success" aria-hidden />
+            Local / Private
           </div>
         </div>
         <nav className="space-y-2" aria-label="Primary navigation">

@@ -51,9 +51,9 @@ export function TimelinePage({
       <PageHeader
         eyebrow="Timeline / Activity rhythm"
         title="집중도 시간대 분석"
-        description="하루의 흐름을 5분 단위로 훑고, 집중 구간과 전환 지점을 찾아보세요."
-        meta={<>5 min<br />Buckets</>}
-        tone="violet"
+        description="5분 단위로 활동 흐름과 앱 전환을 확인합니다."
+        meta={<>5 min<br />Timeline</>}
+        tone="sage"
       />
       <TimelineStateNotice
         loadState={loadState}

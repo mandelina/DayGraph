@@ -25,7 +25,7 @@ export function WeeklyPage() {
       <PageHeader
         eyebrow="Weekly / Pattern review"
         title="이번 주 집중 패턴 요약"
-        description="요일별 리듬과 앱별 변화를 비교해 다음 주의 흐름을 준비하세요."
+        description="요일별 활동 시간과 앱별 변화를 비교합니다."
         meta={<>This week<br />Compare</>}
         tone="warm"
       />

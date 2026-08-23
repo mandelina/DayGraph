@@ -5,7 +5,7 @@ type Props = {
   title: string;
   description: string;
   meta: ReactNode;
-  tone?: "warm" | "violet" | "neutral";
+  tone?: "warm" | "sage" | "neutral";
 };
 
 export function PageHeader({
@@ -27,8 +27,6 @@ export function PageHeader({
         </p>
       </div>
       <div className="page-header-meta relative z-10 shrink-0">{meta}</div>
-      <div className="page-header-orbit page-header-orbit-one" aria-hidden />
-      <div className="page-header-orbit page-header-orbit-two" aria-hidden />
     </header>
   );
 }

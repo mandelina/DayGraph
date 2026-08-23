@@ -26,9 +26,9 @@ export function InsightsPage() {
       <PageHeader
         eyebrow="Insights / Reflection"
         title="집중 패턴 자동 해석"
-        description="수집된 활동에서 반복되는 리듬을 찾아 다음 행동으로 연결합니다."
-        meta={<>Weekly<br />Reflection</>}
-        tone="violet"
+        description="기록된 활동에서 반복되는 패턴을 찾아봅니다."
+        meta={<>Weekly<br />Patterns</>}
+        tone="sage"
       />
       <InsightStateNotice loadState={loadState} errorMessage={errorMessage} />
       {report.hasData ? (

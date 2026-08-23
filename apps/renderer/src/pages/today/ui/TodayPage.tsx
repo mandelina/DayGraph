@@ -40,8 +40,8 @@ export function TodayPage({
       <PageHeader
         eyebrow="Today / Focus overview"
         title="오늘 집중한 앱"
-        description="지금 하루의 에너지가 어디에 쌓였는지 한눈에 확인하세요."
-        meta={<>Live<br />Local only</>}
+        description="오늘 기록된 앱별 활동 시간과 상호작용을 확인합니다."
+        meta={<>Today<br />Activity</>}
         tone="warm"
       />
       <ActivityStateNotice
@@ -63,7 +63,7 @@ export function TodayPage({
               label="Apps"
               value={apps.length}
               hint="오늘 기록된 앱"
-              tone="violet"
+              tone="sage"
             />
             <MetricCard
               label="Clicks"

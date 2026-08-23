@@ -35,8 +35,8 @@ export function SettingsPage({
       <PageHeader
         eyebrow="Settings / Trust center"
         title="DayGraph 기준과 제어"
-        description="활동 점수의 기준과 로컬 데이터 상태를 확인하고 앱 경험을 조정하세요."
-        meta={<>Private<br />By default</>}
+        description="점수 계산, 저장 위치, 시스템 상태를 확인합니다."
+        meta={<>Local<br />Settings</>}
         tone="neutral"
       />
       <ScoreWeightsPanel weights={ACTIVITY_SCORE_WEIGHTS} />

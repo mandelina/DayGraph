@@ -13,7 +13,7 @@ import { ThemeToggle } from "../shared/ui/ThemeToggle";
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavItem>("Today");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("theme") as "dark" | "light") || "dark";
+    return (localStorage.getItem("theme") as "dark" | "light") || "light";
   });
   const {
     todayStats,
@@ -50,7 +50,7 @@ export default function App() {
         <div className="mx-auto w-full max-w-6xl space-y-5">
           <div className="flex items-center justify-between gap-4">
             <div className="hidden text-xs font-bold uppercase tracking-[0.18em] text-muted sm:block">
-              {activeTab} / Local-first intelligence
+              {activeTab} / Local activity journal
             </div>
             <div className="sm:ml-auto">
               <ThemeToggle theme={theme} setTheme={setTheme} />

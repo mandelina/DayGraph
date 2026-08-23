@@ -28,7 +28,7 @@ export function TopAppHero({ app }: Props) {
   const total = segments.reduce((sum, seg) => sum + seg.value, 0) || 1;
 
   return (
-    <article className="surface-card relative h-full overflow-hidden bg-gradient-to-br from-card via-card to-surfaceMuted p-6 text-foreground shadow-xl sm:p-7">
+    <article className="surface-card relative h-full overflow-hidden border-l-4 border-l-primary bg-card p-6 text-foreground shadow-sm sm:p-7">
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="eyebrow text-primary">#1 Today focus</div>
@@ -81,7 +81,6 @@ export function TopAppHero({ app }: Props) {
           ))}
         </div>
       </div>
-      <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full border border-primary/10 bg-primary/5" />
     </article>
   );
 }
