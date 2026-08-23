@@ -14,6 +14,7 @@
     "preview": "pnpm -C apps/electron preview",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
+    "test:e2e": "node scripts/electron-smoke.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "verify": "pnpm check && pnpm build",
     "format": "pnpm -r format",

@@ -55,7 +55,7 @@ pnpm verify
 | DB schema/query/date | `pnpm verify`, query/date unit test 추가/갱신 |
 | Electron IPC | `pnpm verify`, shared/preload/global type 확인 |
 | Collector loop/backend | `pnpm verify`, `/health` status 영향 확인 |
-| macOS helper source/binary | `pnpm verify`, `pnpm -C packages/collector verify:helper:darwin` |
+| macOS helper source/binary | `pnpm verify`, `pnpm -C packages/collector verify:helper:darwin`, `pnpm -C packages/collector verify:helper:darwin-display` |
 | Package/dependency | `pnpm install --lockfile-only` 또는 의존성 명령 후 `pnpm verify` |
 | Docs only | 링크 확인, 필요 시 `pnpm check` |
 
@@ -93,6 +93,16 @@ pnpm -C packages/collector verify:helper:darwin
 ```
 
 `verify:helper:darwin`이 실패하면 source와 prebuilt binary가 어긋난 상태다. binary까지 갱신해서 같은 커밋에 포함한다.
+
+## Electron Smoke E2E
+
+collector와 Electron 개발 앱을 먼저 실행한 뒤, Electron 원격 디버깅 포트를 통해 화면·IPC·주요 탭을 읽기 전용으로 점검한다.
+
+```bash
+ELECTRON_REMOTE_DEBUGGING_PORT=9222 pnpm test:e2e
+```
+
+이 smoke test는 전역 키보드/마우스 입력을 주입하지 않는다.
 
 ## Before Commit
 
