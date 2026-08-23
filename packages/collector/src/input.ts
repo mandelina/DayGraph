@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { formatError } from "./errors";
+import { createUiohookInputBackend } from "./input-backend";
 import { importOptionalModule } from "./optional-import";
 
 const prebuiltInputHelpers = {
@@ -67,26 +68,23 @@ async function setupUiohookInputHooks() {
   try {
     const mod = await importOptionalModule<any>("uiohook-napi");
     const uiohook = mod.uIOhook ?? mod.default?.uIOhook ?? mod.default ?? mod;
-    if (
-      typeof uiohook.on !== "function" ||
-      typeof uiohook.start !== "function"
-    ) {
+    if (typeof uiohook.on !== "function" || typeof uiohook.start !== "function") {
       throw new Error("uiohook-napi module does not expose on/start");
     }
 
-    uiohook.on("mousedown", () => {
-      clicks += 1;
-    });
-    uiohook.on("keydown", () => {
-      keypress += 1;
-    });
-    uiohook.start();
-    stopInputBackend = () => {
-      if (typeof uiohook.stop === "function") {
-        uiohook.stop();
-      }
-    };
-    inputBackend = `uiohook-${process.platform}`;
+    const backend = createUiohookInputBackend(
+      uiohook,
+      process.platform,
+      () => {
+        clicks += 1;
+      },
+      () => {
+        keypress += 1;
+      },
+    );
+    backend.start();
+    stopInputBackend = backend.stop;
+    inputBackend = backend.name;
     inputBackendError = null;
     console.log("[collector][input] backend ready", inputBackend);
   } catch (err) {
