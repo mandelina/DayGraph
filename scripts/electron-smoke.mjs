@@ -78,7 +78,8 @@ const result = await evaluate(`(async()=>{
     );
     if (tab === "Today") {
       const dateToggle = document.querySelector('button[aria-label="날짜 선택"]');
-      dateToggle?.click();
+      const wasCalendarOpen = dateToggle?.getAttribute("aria-expanded") === "true";
+      if (dateToggle && !wasCalendarOpen) dateToggle.click();
       if (dateToggle) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }

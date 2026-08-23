@@ -109,7 +109,7 @@ export function CalendarPicker({ selectedDate, onSelect }: Props) {
                     isSelected
                       ? "bg-foreground text-surface"
                       : day.isToday
-                        ? "bg-accentSoft text-accent"
+                        ? "bg-accentSoft/25 text-accent"
                         : "text-foreground hover:bg-cardMuted"
                   } ${day.isCurrentMonth ? "" : "opacity-35"}`}
                 >

@@ -1,20 +1,20 @@
-/* DayGraph palette: ink, paper, clay, moss, and sand. */
+/* DayGraph palette: cool blue, ink, and quiet neutrals. */
 @theme {
-  --color-surface: #171412;
-  --color-surfaceMuted: #211c19;
-  --color-card: #28221f;
-  --color-cardMuted: #332b26;
-  --color-border: #473b34;
-  --color-primary: #d66a52;
-  --color-primaryStrong: #b94e3b;
-  --color-accent: #91ae9b;
-  --color-accentSoft: #b5c8ba;
-  --color-info: #7f9b8c;
-  --color-success: #8fac7f;
-  --color-warning: #d0a064;
-  --color-danger: #d47770;
-  --color-muted: #b7aaa0;
-  --color-foreground: #f5ede3;
+  --color-surface: #161b20;
+  --color-surfaceMuted: #202930;
+  --color-card: #27333b;
+  --color-cardMuted: #303d46;
+  --color-border: #455762;
+  --color-primary: #85b6cc;
+  --color-primaryStrong: #6c9fb8;
+  --color-accent: #9ec8d8;
+  --color-accentSoft: #75a4b8;
+  --color-info: #86b4c8;
+  --color-success: #7ea7b6;
+  --color-warning: #d1a96b;
+  --color-danger: #d4878e;
+  --color-muted: #a9b8c0;
+  --color-foreground: #edf4f7;
 
   --font-sans: "Pretendard Variable", Inter, "Segoe UI", system-ui,
     -apple-system, sans-serif;
@@ -42,21 +42,21 @@
 
   [data-theme='light'] {
     color-scheme: light;
-    --color-surface: #f5f1eb;
-    --color-surfaceMuted: #ebe5dd;
-    --color-card: #fffdfa;
-    --color-cardMuted: #f3eee7;
-    --color-border: #ded6cc;
-    --color-primary: #cc5146;
-    --color-primaryStrong: #a93d35;
-    --color-accent: #315b4c;
-    --color-accentSoft: #678475;
-    --color-info: #6f8d86;
-    --color-success: #5d7b58;
-    --color-warning: #a86e32;
-    --color-danger: #b6443e;
-    --color-muted: #756e67;
-    --color-foreground: #211e1b;
+    --color-surface: #f4f7f8;
+    --color-surfaceMuted: #e8f0f3;
+    --color-card: #ffffff;
+    --color-cardMuted: #eef4f6;
+    --color-border: #d1dfe6;
+    --color-primary: #477d98;
+    --color-primaryStrong: #2f617b;
+    --color-accent: #5a8ba4;
+    --color-accentSoft: #78a6b8;
+    --color-info: #4f819a;
+    --color-success: #5e8798;
+    --color-warning: #9f7a3d;
+    --color-danger: #a95660;
+    --color-muted: #66747d;
+    --color-foreground: #20262d;
   }
 }
 
