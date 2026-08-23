@@ -37,11 +37,11 @@
 ## 현재 기술 스택
 
 - Package manager: pnpm workspace
-- Runtime: Node 22.x
-- Desktop: Electron 30.x, electron-vite
-- Renderer: React 18, Vite 5, Tailwind 현재 설정 기준
+- Runtime: Node 24.x
+- Desktop: Electron 43.x, electron-vite 5.x
+- Renderer: React 19, Vite 7, Tailwind 4 현재 설정 기준
 - DB: SQLite, Drizzle ORM, better-sqlite3
-- Collector: active-win, optional native input/display backend
+- Collector: get-windows, optional uiohook-napi/node-window-manager native backend
 - Test: Vitest
 
 패키지 버전은 각 `package.json`과 `pnpm-lock.yaml`을 기준으로 판단한다. 문서와 코드가 다르면 코드와 lockfile을 우선 확인한다.

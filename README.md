@@ -24,12 +24,13 @@
 - 클릭·키 입력 합산
 - 집중 구간 / 산만 구간 분석
 - 상위 사용 앱 TOP 5
+- Weekly / Insights 페이지의 실제 SQLite 데이터 분석
 
 ### ✅ 100% Local-First
 
 - SQLite + Drizzle ORM
 - 로컬 파일('./data/dev-activity.sqlite')에만 저장
-- 개인정보 유출 위험 0%
+- 외부 analytics/telemetry 없이 로컬 SQLite에만 저장
 
 ### ✅ Lightweight Architecture
 
@@ -49,15 +50,15 @@
 
 ### Renderer(UI)
 
-- React 18
+- React 19
 - TailwindCSS
 - Zustand
-- Recharts
+- Recharts 3
 
 ### Collector (Activity Worker)
 
-- active-win (활성 창 감지)
-- iohook (전역 클릭/키 입력)
+- get-windows (활성 창 감지)
+- uiohook-napi (Windows/Linux 선택적 전역 클릭/키 입력)
 - node-window-manager (창 좌표 & 모니터 ID)
 - Drizzle ORM + SQLite
 
@@ -87,27 +88,43 @@ data/ # sqlite 파일 저장 폴더
 
 ### 0) 권장 실행 환경
 
-- Node.js 22.x (22.20.0에서 검증)
-- pnpm 9.15.1
-- `better-sqlite3` 네이티브 모듈은 Node 22 계열에서 설치/실행하는 것을 권장
+- Node.js 24.x (24.9.0에서 검증)
+- pnpm 11.22.0 (Corepack 사용)
+- `better-sqlite3`와 `node-window-manager` 네이티브 모듈은 Node 24 ABI로 설치
 
 ### 1) 패키지 설치
 
-pnpm install
+```bash
+corepack pnpm install
+```
 
 ### 2) 개발 모드 실행
 
+```bash
 pnpm dev
+```
 
 - collector + Electron + renderer 개발 서버를 함께 실행합니다.
 
 ### 3) 빌드
 
+```bash
 pnpm build
+```
 
-### 4) Collector 단독 실행 (선택)
+### 4) 전체 검증
 
+```bash
+pnpm verify
+```
+
+`pnpm-workspace.yaml`의 `allowBuilds`는 SQLite, Electron 번들러, 창/아이콘 native helper처럼 앱 실행에 필요한 빌드 스크립트만 허용합니다.
+
+### 5) Collector 단독 실행 (선택)
+
+```bash
 pnpm collector
+```
 
 ---
 
@@ -118,6 +135,8 @@ activity_log 테이블 구조:
 - id: PK
 - timestamp: string
 - app_name: string
+- app_path: string | null
+- bundle_id: string | null
 - window_title: string
 - display_id: number | null
 - is_active: boolean
@@ -138,21 +157,23 @@ activity_log 테이블 구조:
 
 ## ✅ 로드맵
 
-- [ ] Weekly 분석 페이지
+- [x] Weekly 분석 페이지
 - [ ] 파일·탭 단위 상세 분석
-- [ ] 집중 점수 알고리즘
+- [x] 집중 점수 알고리즘
 - [ ] AI 기반 하루 회고 자동 생성
 - [ ] Git commit 연동
-- [ ] 설정 페이지 고도화
+- [x] 설정 페이지의 collector/data directory 상태 표시
 - [ ] Auto-update 기능
+- [ ] Windows 전역 input backend를 Windows 환경에서 수동 검증
 
 ---
 
 ## 🔒 개인정보 보호
 
-DayGraph는 **모든 데이터를 로컬에만 저장**합니다.  
-외부 서버로 어떠한 정보도 전송하지 않습니다.  
-활동 데이터는 'data/dev-activity.sqlite'에 저장됩니다.
+DayGraph는 **모든 활동 데이터를 로컬에만 저장**합니다.
+활동 데이터는 `DATADIR` 또는 Electron userData 아래의 SQLite에 저장되며, collector API도 기본적으로 `127.0.0.1`에만 바인딩됩니다.
+
+macOS에서 Accessibility/Input Monitoring 권한이 없으면 collector는 상태를 `degraded`로 표시하고 가짜 activity를 저장하지 않습니다. Windows의 `uiohook-napi`는 선택적 native backend이므로 설치 또는 권한 문제는 `/health`와 Settings에 표시됩니다.
 
 ---
 

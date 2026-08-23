@@ -27,7 +27,7 @@ The collector and Electron app are separate processes in development. Renderer c
 ## Data Flow
 
 ```text
-active-win / native backend
+get-windows / native backend
   -> collector tick
   -> insertActivity()
   -> data/dev-activity.sqlite
@@ -105,7 +105,7 @@ activity_log
 - Owns React UI and presentation state.
 - Reads activity data only through `window.api`.
 - Keeps testable domain calculations in `entities/*/lib`.
-- Distinguishes loading, empty, error, and mock states.
+- Distinguishes loading, empty, and error states. Mock data is opt-in for Today/Timeline only via `VITE_USE_MOCK=1`.
 
 ## Renderer Layering
 
@@ -130,7 +130,7 @@ Rules:
 Input:
 
 - macOS uses the prebuilt event-tap helper.
-- Other platforms attempt an optional `iohook` backend.
+- Other platforms attempt an optional `uiohook-napi` backend.
 - If input collection fails, collector runs with `inputBackend = "noop"` and reports the reason through `/health`.
 
 Display:
@@ -151,8 +151,10 @@ Defined in `packages/shared/src/ipc.ts`.
 Current channels:
 
 - `daygraph:query-day`
+- `daygraph:query-range`
 - `daygraph:get-app-icon`
 - `daygraph:get-collector-status`
+- `daygraph:open-data-dir`
 
 When adding or changing IPC:
 
@@ -194,5 +196,5 @@ Document-only changes may skip runtime verification, but the changed links shoul
 
 ## Known Architecture Debt
 
-- Weekly, Insights, and parts of Settings still use mock data.
-- README may lag behind implementation details and should be kept aligned with this document.
+- Windows `uiohook-napi` input collection and macOS permission-granted collection still need platform-specific manual verification.
+- README and architecture docs should be kept aligned with implementation details.
