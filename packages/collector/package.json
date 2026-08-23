@@ -8,6 +8,8 @@
     "start": "tsx src/index.ts",
     "build:helper:darwin": "sh ./scripts/build-macos-helper.sh",
     "verify:helper:darwin": "sh ./scripts/check-macos-helper.sh",
+    "build:helper:darwin-display": "sh ./scripts/build-macos-display-helper.sh",
+    "verify:helper:darwin-display": "sh ./scripts/check-macos-display-helper.sh",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo 'no lint configured'",
     "format": "prettier --write . || true"

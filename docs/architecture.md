@@ -135,7 +135,8 @@ Input:
 
 Display:
 
-- Collector attempts `node-window-manager` display/monitor data.
+- macOS uses the prebuilt CoreGraphics helper to read active display bounds.
+- Windows uses `node-window-manager` monitor bounds through its `getBounds()` API.
 - If unavailable, display id falls back to coordinate-based estimation.
 - Display backend status is reported through `/health`.
 
@@ -184,6 +185,7 @@ Collector/native changes:
 ```bash
 pnpm verify
 pnpm -C packages/collector verify:helper:darwin
+pnpm -C packages/collector verify:helper:darwin-display
 ```
 
 Renderer-only UI logic:
