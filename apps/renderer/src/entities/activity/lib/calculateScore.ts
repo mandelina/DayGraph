@@ -14,6 +14,8 @@ export function summarizeByApp(data: Activity[]): AppActivity[] {
     if (!map.has(item.app_name)) {
       map.set(item.app_name, {
         appName: item.app_name,
+        appPath: item.app_path ?? null,
+        bundleId: item.bundle_id ?? null,
         activeSeconds: 0,
         clickCount: 0,
         keypressCount: 0,
@@ -21,6 +23,8 @@ export function summarizeByApp(data: Activity[]): AppActivity[] {
       });
     }
     const target = map.get(item.app_name)!;
+    if (!target.appPath && item.app_path) target.appPath = item.app_path;
+    if (!target.bundleId && item.bundle_id) target.bundleId = item.bundle_id;
     target.activeSeconds += 1;
     target.clickCount += item.clicks;
     target.keypressCount += item.keypress;

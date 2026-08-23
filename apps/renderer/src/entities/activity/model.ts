@@ -16,6 +16,8 @@ export type TimelineFilterMode = "all" | "focused" | "hide-idle";
 
 export type AppActivity = {
   appName: string;
+  appPath: string | null;
+  bundleId: string | null;
   activeSeconds: number;
   clickCount: number;
   keypressCount: number;

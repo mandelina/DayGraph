@@ -26,8 +26,8 @@ export function RemainingAppsTable({ apps }: Props) {
             <div className="w-6 text-center text-xs font-black text-muted">#{idx + 2}</div>
             <AppIcon
               appName={app.appName}
-              appPath={null}
-              bundleId={null}
+              appPath={app.appPath}
+              bundleId={app.bundleId}
               size={32}
             />
             <div className="min-w-0 flex-1">

@@ -35,8 +35,8 @@ export function TopAppHero({ app }: Props) {
           <div className="mt-4 flex items-center gap-3">
             <AppIcon
               appName={app.appName}
-              appPath={null}
-              bundleId={null}
+              appPath={app.appPath}
+              bundleId={app.bundleId}
               size={48}
             />
             <div className="truncate text-3xl font-black tracking-tight sm:text-4xl">

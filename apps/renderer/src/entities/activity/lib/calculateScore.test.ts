@@ -15,6 +15,8 @@ describe("summarizeByApp", () => {
     expect(result).toEqual([
       {
         appName: "VSCode",
+        appPath: null,
+        bundleId: null,
         activeSeconds: 2,
         clickCount: 5,
         keypressCount: 10,
@@ -22,6 +24,8 @@ describe("summarizeByApp", () => {
       },
       {
         appName: "Chrome",
+        appPath: null,
+        bundleId: null,
         activeSeconds: 1,
         clickCount: 1,
         keypressCount: 2,
@@ -41,6 +45,26 @@ describe("summarizeByApp", () => {
     ]);
 
     expect(result).toEqual([]);
+  });
+
+  it("앱 아이콘 조회에 필요한 경로와 bundle id를 보존한다", () => {
+    const result = summarizeByApp([
+      createActivity({
+        app_name: "Chrome",
+        app_path: null,
+        bundle_id: null,
+      }),
+      createActivity({
+        app_name: "Chrome",
+        app_path: "/Applications/Google Chrome.app",
+        bundle_id: "com.google.Chrome",
+      }),
+    ]);
+
+    expect(result[0]).toMatchObject({
+      appPath: "/Applications/Google Chrome.app",
+      bundleId: "com.google.Chrome",
+    });
   });
 });
 

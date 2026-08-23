@@ -55,6 +55,7 @@ const result = await evaluate(`(async()=>{
     api: ["queryDay", "queryRange", "getAppIcon", "getCollectorStatus", "openDataDir"]
       .every((key) => typeof window.api?.[key] === "function"),
     collector: false,
+    todayThumbnails: false,
     tabs: {},
   };
   const status = await window.api?.getCollectorStatus?.();
@@ -67,8 +68,17 @@ const result = await evaluate(`(async()=>{
       continue;
     }
     button.click();
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    await new Promise((resolve) =>
+      setTimeout(resolve, tab === "Today" ? 500 : 120),
+    );
     checks.tabs[tab] = document.body.innerText.includes(heading);
+    if (tab === "Today") {
+      const emptyToday = document.body.innerText.includes(
+        "오늘 활동 데이터가 없습니다.",
+      );
+      checks.todayThumbnails =
+        emptyToday || document.querySelectorAll("main img[alt]").length > 0;
+    }
   }
   return { checks, status };
 })()`);
