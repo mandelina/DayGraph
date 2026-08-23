@@ -59,6 +59,7 @@ const result = await evaluate(`(async()=>{
     workspaceThumbnail: false,
     activeNavIcon: false,
     calendar: false,
+    activeCalendarColor: false,
     dateSelection: false,
     tabs: {},
   };
@@ -84,6 +85,13 @@ const result = await evaluate(`(async()=>{
       checks.calendar =
         Boolean(document.querySelector('[aria-label="Activity calendar"]')) &&
         document.querySelectorAll('button[aria-label*="활동 보기"]').length >= 28;
+      const activeCalendarDay = document.querySelector(
+        'button[aria-label*="활동 보기"][aria-pressed="true"]',
+      );
+      if (activeCalendarDay) {
+        const dayStyle = getComputedStyle(activeCalendarDay);
+        checks.activeCalendarColor = dayStyle.color !== dayStyle.backgroundColor;
+      }
       const todayReset = [...document.querySelectorAll("button")].find(
         (item) => item.innerText.includes("오늘로 이동"),
       );

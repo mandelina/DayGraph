@@ -107,7 +107,7 @@ export function CalendarPicker({ selectedDate, onSelect }: Props) {
                   onClick={() => selectDate(day.iso)}
                   className={`relative grid h-8 place-items-center rounded-lg text-xs font-bold transition ${
                     isSelected
-                      ? "bg-foreground text-paper"
+                      ? "bg-foreground text-surface"
                       : day.isToday
                         ? "bg-accentSoft text-accent"
                         : "text-foreground hover:bg-cardMuted"
