@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { insertActivity } from "@daygraph/db/queries";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { resolveAppPathFromBundleId } from "./app-path";
-import { getActiveWindow } from "./active-window";
+import { getActiveWindow, getActiveWindowStatus } from "./active-window";
 import { startApiServer } from "./api";
 import { calcDisplayId, getDisplayStatus } from "./display";
 import { formatError } from "./errors";
@@ -27,8 +27,14 @@ let lastTickAt: string | null = null;
 let lastTickDurationMs: number | null = null;
 let lastTickError: string | null = null;
 
-async function tick() {
+async function tick(): Promise<string | null> {
   const win = await getActiveWindow();
+  if (!win) {
+    // 포커싱된 창을 확인할 수 없는 입력은 다음 앱에 잘못 귀속하지 않는다.
+    resetInputCounts();
+    return getActiveWindowStatus().activeWindowBackendError ??
+      "active window unavailable";
+  }
   const now = new Date().toISOString();
   if (!win.path && !missingPathApps.has(win.app)) {
     missingPathApps.add(win.app);
@@ -64,6 +70,8 @@ async function tick() {
     }
   }
   const inputCounts = readInputCounts();
+  // 현재 tick의 1초 입력 구간을 먼저 닫아 DB 오류 시 다음 tick에 중복 집계하지 않는다.
+  resetInputCounts();
   await insertActivity({
     timestamp: now,
     app_name: win.app,
@@ -75,8 +83,7 @@ async function tick() {
     clicks: inputCounts.clicks,
     keypress: inputCounts.keypress,
   });
-  // 1초마다 집계 저장 후 초기화
-  resetInputCounts();
+  return null;
 }
 
 async function runTickOnce() {
@@ -89,9 +96,9 @@ async function runTickOnce() {
   isTickRunning = true;
   const startedAt = Date.now();
   try {
-    await tick();
+    const tickError = await tick();
     lastTickAt = new Date().toISOString();
-    lastTickError = null;
+    lastTickError = tickError;
   } catch (err) {
     lastTickError = formatError(err);
     console.error("[collector] tick failed", err);
@@ -116,7 +123,7 @@ async function main() {
   setInterval(() => {
     void runTickOnce();
   }, 1000);
-  startApiServer(getHealthPayload);
+  await startApiServer(getHealthPayload);
   // 프로세스 유지
   console.log("[collector] started");
 }
@@ -124,9 +131,27 @@ async function main() {
 function getHealthPayload() {
   const inputStatus = getInputStatus();
   const displayStatus = getDisplayStatus();
+  const activeWindowStatus = getActiveWindowStatus();
+  const dataDir = process.env.DATADIR
+    ? isAbsolute(process.env.DATADIR)
+      ? process.env.DATADIR
+      : resolve(process.env.DAYGRAPH_ROOT ?? repoRoot, process.env.DATADIR)
+    : resolve(process.env.DAYGRAPH_ROOT ?? repoRoot, "data");
+  const degraded =
+    activeWindowStatus.activeWindowBackend !== "get-windows" ||
+    inputStatus.inputBackend === "noop";
   return {
-    ok: true,
+    ok: !degraded,
+    status: degraded ? "degraded" : "healthy",
     platform: process.platform,
+    dataDir,
+    dataQuality:
+      activeWindowStatus.activeWindowBackend === "get-windows" &&
+      !activeWindowStatus.activeWindowBackendError
+        ? "real"
+        : "unavailable",
+    activeWindowBackend: activeWindowStatus.activeWindowBackend,
+    activeWindowBackendError: activeWindowStatus.activeWindowBackendError,
     inputBackend: inputStatus.inputBackend,
     inputBackendError: inputStatus.inputBackendError,
     displayBackend: displayStatus.displayBackend,

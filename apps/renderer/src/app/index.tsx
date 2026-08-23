@@ -67,7 +67,7 @@ export default function App() {
         )}
         {activeTab === "Weekly" && <WeeklyPage />}
         {activeTab === "Insights" && <InsightsPage />}
-        {activeTab === "Settings" && <SettingsPage />}
+        {activeTab === "Settings" && <SettingsPage theme={theme} />}
       </main>
     </div>
   );

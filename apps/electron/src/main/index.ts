@@ -3,6 +3,7 @@ import {
   BrowserWindow,
   ipcMain,
   nativeImage,
+  shell,
   type NativeImage,
 } from "electron";
 import { join, resolve, isAbsolute } from "node:path";
@@ -153,19 +154,30 @@ async function ensureAppReady() {
   }
 }
 
-// Typed IPC: collector HTTP API를 통해 당일 로그 조회
+// Typed IPC: collector HTTP API를 통해 activity 로그 조회
 ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
-  try {
+  const url = new URL("/logs", collectorBaseUrl);
+  url.searchParams.set("date", dateISO);
+  return fetchCollectorJson(url, "queryDay");
+});
+
+ipcMain.handle(
+  IPC.channels.queryRange,
+  async (_e, startDateISO: string, endDateISO: string) => {
     const url = new URL("/logs", collectorBaseUrl);
-    url.searchParams.set("date", dateISO);
-    const res = await fetch(url, {
-      headers: { accept: "application/json" },
-    });
-    if (!res.ok) throw new Error(`collector api ${res.status}`);
-    return await res.json();
+    url.searchParams.set("start", startDateISO);
+    url.searchParams.set("end", endDateISO);
+    return fetchCollectorJson(url, "queryRange");
+  },
+);
+
+ipcMain.handle(IPC.channels.openDataDir, async () => {
+  try {
+    const dataDir = await ensureDataDir();
+    const error = await shell.openPath(dataDir);
+    return { ok: !error, error: error || null };
   } catch (err) {
-    console.error("[queryDay] collector api failed:", err);
-    return [];
+    return { ok: false, error: formatError(err) };
   }
 });
 
@@ -232,8 +244,13 @@ async function getCollectorStatus(): Promise<CollectorStatusResponse> {
     const payload = (await res.json()) as Partial<CollectorStatusResponse>;
     return {
       ok: payload.ok === true,
+      status: payload.status ?? (payload.ok === true ? "healthy" : "degraded"),
       reachable: true,
       url: healthUrl,
+      dataDir: payload.dataDir ?? process.env.DATADIR ?? null,
+      dataQuality: payload.dataQuality ?? "unavailable",
+      activeWindowBackend: payload.activeWindowBackend ?? null,
+      activeWindowBackendError: payload.activeWindowBackendError ?? null,
       platform: payload.platform ?? null,
       inputBackend: payload.inputBackend ?? null,
       inputBackendError: payload.inputBackendError ?? null,
@@ -252,8 +269,13 @@ async function getCollectorStatus(): Promise<CollectorStatusResponse> {
   } catch (err) {
     return {
       ok: false,
+      status: "degraded",
       reachable: false,
       url: healthUrl,
+      dataDir: process.env.DATADIR ?? null,
+      dataQuality: "unavailable",
+      activeWindowBackend: null,
+      activeWindowBackendError: null,
       platform: null,
       inputBackend: null,
       inputBackendError: null,
@@ -271,6 +293,19 @@ async function getCollectorStatus(): Promise<CollectorStatusResponse> {
     };
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+async function fetchCollectorJson(url: URL, operation: string) {
+  try {
+    const res = await fetch(url, {
+      headers: { accept: "application/json" },
+    });
+    if (!res.ok) throw new Error(`collector api ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error(`[${operation}] collector api failed:`, err);
+    throw err;
   }
 }
 

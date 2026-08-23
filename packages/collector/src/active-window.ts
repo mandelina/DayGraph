@@ -1,4 +1,5 @@
 import { importOptionalModule } from "./optional-import";
+import { formatError } from "./errors";
 
 export type WindowBounds = { x: number; y: number; width: number; height: number };
 
@@ -10,13 +11,34 @@ export type ActiveWindowInfo = {
   bounds?: WindowBounds | undefined;
 };
 
-const fallbackApps = ["Cat", "Rabbit", "Hamster"];
+type ActiveWindowStatus = {
+  activeWindowBackend: "get-windows" | "unavailable";
+  activeWindowBackendError: string | null;
+};
 
-// active-win 실패 시에도 collector loop가 살아 있도록 목업 값을 반환한다.
-export async function getActiveWindow(): Promise<ActiveWindowInfo> {
+let activeWindowBackend: ActiveWindowStatus["activeWindowBackend"] =
+  "unavailable";
+let activeWindowBackendError: string | null = "not initialized";
+let lastLoggedError: string | null = null;
+
+// 권한/네이티브 backend 실패 시 가짜 activity를 저장하지 않고 null을 반환한다.
+export async function getActiveWindow(): Promise<ActiveWindowInfo | null> {
   try {
-    const mod = await importOptionalModule<any>("active-win");
-    const res = await (mod.default as any)();
+    const mod = await importOptionalModule<any>("get-windows");
+    const activeWindow = mod.activeWindow ?? mod.default?.activeWindow;
+    if (typeof activeWindow !== "function") {
+      throw new Error("get-windows does not expose activeWindow");
+    }
+    const res = await activeWindow();
+    if (!res) {
+      activeWindowBackend = "get-windows";
+      activeWindowBackendError = "no active window returned";
+      return null;
+    }
+
+    activeWindowBackend = "get-windows";
+    activeWindowBackendError = null;
+    lastLoggedError = null;
 
     return {
       app: res.owner?.name ?? "Unknown",
@@ -25,16 +47,20 @@ export async function getActiveWindow(): Promise<ActiveWindowInfo> {
       title: res.title ?? "Unknown",
       bounds: res.bounds as WindowBounds | undefined,
     };
-  } catch (e) {
-    console.log("res error : ", e);
-
-    const i = Math.floor(Date.now() / 5000) % fallbackApps.length;
-    return {
-      app: fallbackApps[i],
-      path: null,
-      bundleId: null,
-      title: `${fallbackApps[i]} — Mock`,
-      bounds: { x: 0, y: 0, width: 100, height: 100 },
-    };
+  } catch (err) {
+    activeWindowBackend = "unavailable";
+    activeWindowBackendError = formatError(err);
+    if (lastLoggedError !== activeWindowBackendError) {
+      lastLoggedError = activeWindowBackendError;
+      console.warn("[collector][active-window] unavailable", activeWindowBackendError);
+    }
+    return null;
   }
+}
+
+export function getActiveWindowStatus(): ActiveWindowStatus {
+  return {
+    activeWindowBackend,
+    activeWindowBackendError,
+  };
 }

@@ -29,6 +29,19 @@ describe("summarizeByApp", () => {
       },
     ]);
   });
+
+  it("비활성 기록은 앱 활동 점수에서 제외한다", () => {
+    const result = summarizeByApp([
+      createActivity({
+        app_name: "Chrome",
+        is_active: false,
+        clicks: 100,
+        keypress: 100,
+      }),
+    ]);
+
+    expect(result).toEqual([]);
+  });
 });
 
 function createActivity(overrides: Partial<Activity>): Activity {

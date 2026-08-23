@@ -2,9 +2,11 @@ type Props = {
   status: {
     collector: string;
     lastSync: string;
-    autoUpdate: boolean;
+    autoUpdate: string;
     inputBackend: string;
     displayBackend: string;
+    activeWindowBackend: string;
+    dataQuality: string;
     error: string | null;
   };
 };
@@ -16,12 +18,14 @@ export function SystemStatusPanel({ status }: Props) {
       <div className="space-y-3">
         <StatusRow label="Collector" value={status.collector} />
         <StatusRow label="마지막 동기화" value={status.lastSync} />
-        <StatusRow
-          label="Auto-update"
-          value={status.autoUpdate ? "Enabled" : "Disabled"}
-        />
+        <StatusRow label="Auto-update" value={status.autoUpdate} />
         <StatusRow label="Input backend" value={status.inputBackend} />
         <StatusRow label="Display backend" value={status.displayBackend} />
+        <StatusRow
+          label="Active window backend"
+          value={status.activeWindowBackend}
+        />
+        <StatusRow label="Data quality" value={status.dataQuality} />
         {status.error ? <StatusRow label="상태 메시지" value={status.error} /> : null}
       </div>
     </section>

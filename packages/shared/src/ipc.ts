@@ -2,13 +2,16 @@
 export const IPC = {
   channels: {
     queryDay: 'daygraph:query-day',
+    queryRange: 'daygraph:query-range',
     getAppIcon: 'daygraph:get-app-icon',
-    getCollectorStatus: 'daygraph:get-collector-status'
+    getCollectorStatus: 'daygraph:get-collector-status',
+    openDataDir: 'daygraph:open-data-dir'
   }
 } as const
 
 export type QueryDayRequest = string // date ISO (YYYY-MM-DD)
-export type QueryDayResponse = Array<{
+export type ActivityRow = {
+  id: number
   timestamp: string
   app_name: string
   app_path: string | null
@@ -19,7 +22,14 @@ export type QueryDayResponse = Array<{
   clicks: number
   keypress: number
   created_at: string
-}>
+}
+
+export type QueryDayResponse = ActivityRow[]
+export type QueryRangeRequest = {
+  startDateISO: string
+  endDateISO: string
+}
+export type QueryRangeResponse = ActivityRow[]
 
 export type GetAppIconRequest = {
   appPath?: string | null
@@ -29,8 +39,13 @@ export type GetAppIconResponse = string | null
 
 export type CollectorStatusResponse = {
   ok: boolean
+  status: 'healthy' | 'degraded'
   reachable: boolean
   url: string
+  dataDir: string | null
+  dataQuality: 'real' | 'unavailable'
+  activeWindowBackend: string | null
+  activeWindowBackendError: string | null
   platform: string | null
   inputBackend: string | null
   inputBackendError: string | null
@@ -44,5 +59,10 @@ export type CollectorStatusResponse = {
   lastTickDurationMs: number | null
   lastTickError: string | null
   timestamp: string
+  error: string | null
+}
+
+export type OpenDataDirResponse = {
+  ok: boolean
   error: string | null
 }

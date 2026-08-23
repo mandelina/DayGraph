@@ -29,8 +29,19 @@ export function insertActivity(entry: {
 
 // YYYY-MM-DD 기준으로 당일 데이터 조회
 export function queryDay(dateISO: string) {
+  return queryRange(dateISO, dateISO)
+}
+
+// YYYY-MM-DD 기준의 시작일과 종료일(포함)을 조회한다.
+export function queryRange(startDateISO: string, endDateISO: string) {
+  const { start } = getLocalDayRange(startDateISO)
+  const { end } = getLocalDayRange(endDateISO)
+  if (startDateISO > endDateISO) {
+    throw new Error(
+      `invalid date range: ${startDateISO}..${endDateISO}`
+    )
+  }
   const db = getDB()
-  const { start, end } = getLocalDayRange(dateISO)
   return db
     .select()
     .from(activityLog)

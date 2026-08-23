@@ -18,7 +18,7 @@ let stopInputBackend: (() => void) | null = null;
 
 export async function setupInputHooks() {
   if (process.platform !== "darwin") {
-    await setupIohookInputHooks();
+    await setupUiohookInputHooks();
     return;
   }
   try {
@@ -63,35 +63,35 @@ export function getInputStatus() {
   };
 }
 
-async function setupIohookInputHooks() {
+async function setupUiohookInputHooks() {
   try {
-    const mod = await importOptionalModule<any>("iohook");
-    const iohook = mod.default ?? mod;
+    const mod = await importOptionalModule<any>("uiohook-napi");
+    const uiohook = mod.uIOhook ?? mod.default?.uIOhook ?? mod.default ?? mod;
     if (
-      typeof iohook.on !== "function" ||
-      typeof iohook.start !== "function"
+      typeof uiohook.on !== "function" ||
+      typeof uiohook.start !== "function"
     ) {
-      throw new Error("iohook module does not expose on/start");
+      throw new Error("uiohook-napi module does not expose on/start");
     }
 
-    iohook.on("mousedown", () => {
+    uiohook.on("mousedown", () => {
       clicks += 1;
     });
-    iohook.on("keydown", () => {
+    uiohook.on("keydown", () => {
       keypress += 1;
     });
-    iohook.start();
+    uiohook.start();
     stopInputBackend = () => {
-      if (typeof iohook.stop === "function") {
-        iohook.stop();
+      if (typeof uiohook.stop === "function") {
+        uiohook.stop();
       }
     };
-    inputBackend = `iohook-${process.platform}`;
+    inputBackend = `uiohook-${process.platform}`;
     inputBackendError = null;
     console.log("[collector][input] backend ready", inputBackend);
   } catch (err) {
     inputBackend = "noop";
-    inputBackendError = `iohook unavailable on ${process.platform}: ${formatError(
+    inputBackendError = `uiohook unavailable on ${process.platform}: ${formatError(
       err
     )}`;
     console.warn("[collector][input]", inputBackendError);

@@ -1,9 +1,6 @@
 import { AppActivity } from "../../entities/activity/model";
+import { ACTIVITY_SCORE_WEIGHTS } from "../../entities/activity/lib/calculateScore";
 import { formatSeconds } from "../../shared/lib/time";
-
-const ACTIVE_WEIGHT = 1;
-const CLICK_WEIGHT = 2;
-const KEYPRESS_WEIGHT = 0.5;
 
 type Props = {
   app: AppActivity;
@@ -13,17 +10,17 @@ export function TopAppHero({ app }: Props) {
   const segments = [
     {
       label: "Active",
-      value: app.activeSeconds * ACTIVE_WEIGHT,
+      value: app.activeSeconds * ACTIVITY_SCORE_WEIGHTS.active,
       color: "bg-success",
     },
     {
       label: "Clicks",
-      value: app.clickCount * CLICK_WEIGHT,
+      value: app.clickCount * ACTIVITY_SCORE_WEIGHTS.clicks,
       color: "bg-accent",
     },
     {
       label: "Keys",
-      value: app.keypressCount * KEYPRESS_WEIGHT,
+      value: app.keypressCount * ACTIVITY_SCORE_WEIGHTS.keys,
       color: "bg-info",
     },
   ];

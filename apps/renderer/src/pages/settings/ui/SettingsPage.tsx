@@ -1,14 +1,29 @@
 import { useEffect, useState } from "react";
 import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
+import { ACTIVITY_SCORE_WEIGHTS } from "../../../entities/activity/lib/calculateScore";
 import { ScoreWeightsPanel } from "../../../widgets/settings/ScoreWeightsPanel";
 import { DataPrivacyPanel } from "../../../widgets/settings/DataPrivacyPanel";
 import { UIOptionsPanel } from "../../../widgets/settings/UIOptionsPanel";
 import { SystemStatusPanel } from "../../../widgets/settings/SystemStatusPanel";
-import { useSettingsMock } from "./mock-data";
 
-export function SettingsPage() {
-  const data = useSettingsMock();
+export function SettingsPage({ theme }: { theme: "dark" | "light" }) {
   const collectorStatus = useCollectorStatus();
+  const [openError, setOpenError] = useState<string | null>(null);
+
+  const openDataDir = () => {
+    const request = window.api?.openDataDir?.();
+    if (!request) {
+      setOpenError("Electron API unavailable; cannot open the data directory.");
+      return;
+    }
+    request
+      .then((result) => setOpenError(result.ok ? null : result.error))
+      .catch((error: unknown) => setOpenError(formatError(error)));
+  };
+
+  const collectorRunning =
+    collectorStatus?.reachable === true && collectorStatus.status !== "degraded";
+
   return (
     <>
       <header className="bg-primary text-surface px-4 py-3 rounded-xl flex items-center justify-between">
@@ -16,25 +31,42 @@ export function SettingsPage() {
           <div className="text-xs uppercase tracking-wide font-semibold">
             Settings
           </div>
-          <div className="text-2xl font-bold">
-            DayGraph 기준과 제어
-          </div>
+          <div className="text-2xl font-bold">DayGraph 기준과 제어</div>
         </div>
         <div className="text-sm text-surface/70">환경 설정</div>
       </header>
-      <ScoreWeightsPanel weights={data.scoreWeights} />
-      <DataPrivacyPanel options={data.privacy} />
-      <UIOptionsPanel options={data.uiOptions} />
+      <ScoreWeightsPanel weights={ACTIVITY_SCORE_WEIGHTS} />
+      <DataPrivacyPanel
+        options={{
+          dataDir: collectorStatus?.dataDir ?? "확인할 수 없음",
+          collector: collectorRunning,
+          inputBackend: collectorStatus?.inputBackend ?? "unknown",
+          activeWindowBackend:
+            collectorStatus?.activeWindowBackend ?? "unknown",
+        }}
+        openError={openError}
+        onOpenDataDir={openDataDir}
+      />
+      <UIOptionsPanel
+        options={{
+          theme: theme === "dark" ? "Dark" : "Light",
+          density: "Detailed",
+        }}
+      />
       <SystemStatusPanel
         status={{
-          ...data.systemStatus,
           collector: getCollectorLabel(collectorStatus),
           lastSync: getLastStatusLabel(collectorStatus),
+          autoUpdate: "Not configured",
           inputBackend: collectorStatus?.inputBackend ?? "unknown",
           displayBackend: collectorStatus?.displayBackend ?? "unknown",
+          activeWindowBackend:
+            collectorStatus?.activeWindowBackend ?? "unknown",
+          dataQuality: collectorStatus?.dataQuality ?? "unavailable",
           error:
             collectorStatus?.error ??
             collectorStatus?.inputBackendError ??
+            collectorStatus?.activeWindowBackendError ??
             collectorStatus?.displayBackendError ??
             collectorStatus?.lastTickError ??
             null,
@@ -51,33 +83,17 @@ function useCollectorStatus() {
     let disposed = false;
 
     const fetchStatus = () => {
-      window.api
-        ?.getCollectorStatus?.()
+      const request = window.api?.getCollectorStatus?.();
+      if (!request) {
+        if (!disposed) setStatus(createUnavailableStatus("Electron API unavailable"));
+        return;
+      }
+      request
         .then((nextStatus) => {
           if (!disposed) setStatus(nextStatus);
         })
-        .catch((err) => {
-          if (!disposed) {
-            setStatus({
-              ok: false,
-              reachable: false,
-              url: "",
-              platform: null,
-              inputBackend: null,
-              inputBackendError: null,
-              displayBackend: null,
-              displayBackendError: null,
-              pid: null,
-              uptimeSeconds: null,
-              tickRunning: false,
-              skippedTicks: 0,
-              lastTickAt: null,
-              lastTickDurationMs: null,
-              lastTickError: null,
-              timestamp: new Date().toISOString(),
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
+        .catch((err: unknown) => {
+          if (!disposed) setStatus(createUnavailableStatus(formatError(err)));
         });
     };
 
@@ -92,15 +108,47 @@ function useCollectorStatus() {
   return status;
 }
 
+function createUnavailableStatus(error: string): CollectorStatusResponse {
+  return {
+    ok: false,
+    status: "degraded",
+    reachable: false,
+    url: "",
+    dataDir: null,
+    dataQuality: "unavailable",
+    activeWindowBackend: null,
+    activeWindowBackendError: null,
+    platform: null,
+    inputBackend: null,
+    inputBackendError: null,
+    displayBackend: null,
+    displayBackendError: null,
+    pid: null,
+    uptimeSeconds: null,
+    tickRunning: false,
+    skippedTicks: 0,
+    lastTickAt: null,
+    lastTickDurationMs: null,
+    lastTickError: null,
+    timestamp: new Date().toISOString(),
+    error,
+  };
+}
+
 function getCollectorLabel(status: CollectorStatusResponse | null) {
   if (!status) return "checking";
-  return status.reachable && status.ok ? "running" : "unreachable";
+  if (!status.reachable) return "unreachable";
+  return status.status === "degraded" ? "degraded" : "running";
 }
 
 function getLastStatusLabel(status: CollectorStatusResponse | null) {
-  if (!status) return "확인 중";
+  if (!status?.timestamp) return "확인 중";
   return new Date(status.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatError(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }

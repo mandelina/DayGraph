@@ -1,13 +1,16 @@
 import { Activity, AppActivity } from "../model";
 
-const ACTIVE_WEIGHT = 1;
-const CLICK_WEIGHT = 2;
-const KEYPRESS_WEIGHT = 0.5;
+export const ACTIVITY_SCORE_WEIGHTS = {
+  active: 1,
+  clicks: 2,
+  keys: 0.5,
+} as const;
 
 export function summarizeByApp(data: Activity[]): AppActivity[] {
   const map = new Map<string, AppActivity>();
 
   data.forEach((item) => {
+    if (!item.is_active) return;
     if (!map.has(item.app_name)) {
       map.set(item.app_name, {
         appName: item.app_name,
@@ -26,9 +29,9 @@ export function summarizeByApp(data: Activity[]): AppActivity[] {
   return Array.from(map.values())
     .map((entry) => {
       const weighted =
-        entry.activeSeconds * ACTIVE_WEIGHT +
-        entry.clickCount * CLICK_WEIGHT +
-        entry.keypressCount * KEYPRESS_WEIGHT;
+        entry.activeSeconds * ACTIVITY_SCORE_WEIGHTS.active +
+        entry.clickCount * ACTIVITY_SCORE_WEIGHTS.clicks +
+        entry.keypressCount * ACTIVITY_SCORE_WEIGHTS.keys;
       return { ...entry, score: Number(weighted.toFixed(1)) };
     })
     .sort((a, b) => b.score - a.score);

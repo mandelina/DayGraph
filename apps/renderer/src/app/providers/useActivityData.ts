@@ -45,8 +45,8 @@ export function useActivityData(): ActivityData {
 
     if (!window.api?.queryDay) {
       setRows([]);
-      setLoadState("mock");
-      setErrorMessage("Electron API unavailable; using mock data.");
+      setLoadState("error");
+      setErrorMessage("Electron API unavailable; activity data cannot be loaded.");
       return;
     }
 

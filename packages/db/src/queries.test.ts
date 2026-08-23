@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLocalDayRange } from "./queries";
+import { getLocalDayRange, queryRange } from "./queries";
 
 describe("getLocalDayRange", () => {
   it("로컬 날짜의 시작과 다음날 시작을 UTC ISO 범위로 변환한다", () => {
@@ -14,6 +14,12 @@ describe("getLocalDayRange", () => {
   it("존재하지 않는 날짜는 거부한다", () => {
     expect(() => getLocalDayRange("2026-02-31")).toThrow(
       "invalid dateISO: 2026-02-31",
+    );
+  });
+
+  it("시작일이 종료일보다 늦은 범위는 거부한다", () => {
+    expect(() => queryRange("2026-08-12", "2026-08-11")).toThrow(
+      "invalid date range: 2026-08-12..2026-08-11",
     );
   });
 });
