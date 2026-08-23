@@ -45,7 +45,7 @@ const evaluate = (expression) =>
 const result = await evaluate(`(async()=>{
   const expectedTabs = {
     Today: "오늘 집중한 앱",
-    Timeline: "정밀 Activity Timeline",
+    Timeline: "집중도 시간대 분석",
     Weekly: "이번 주 집중 패턴 요약",
     Insights: "집중 패턴 자동 해석",
     Settings: "DayGraph 기준과 제어",

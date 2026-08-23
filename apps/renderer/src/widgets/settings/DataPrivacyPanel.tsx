@@ -15,19 +15,20 @@ export function DataPrivacyPanel({
   onOpenDataDir,
 }: Props) {
   return (
-    <section className="bg-card rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">데이터 & Privacy</h2>
-      <div className="space-y-3">
+    <section className="surface-card p-5 sm:p-6">
+      <div className="eyebrow text-muted">Local-first</div>
+      <h2 className="mt-2 text-xl font-black tracking-tight">데이터 & Privacy</h2>
+      <div className="mt-5 space-y-3">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-sm font-semibold">데이터 경로</div>
-            <div className="text-xs text-muted truncate" title={options.dataDir}>
+            <div className="text-sm font-bold">데이터 경로</div>
+            <div className="mt-1 truncate text-xs text-muted" title={options.dataDir}>
               {options.dataDir}
             </div>
           </div>
           <button
             type="button"
-            className="text-sm text-accent shrink-0"
+            className="shrink-0 rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-bold text-accent transition hover:bg-accent/20"
             onClick={onOpenDataDir}
           >
             Open
@@ -47,9 +48,9 @@ export function DataPrivacyPanel({
 
 function ToggleRow({ label, enabled }: { label: string; enabled: boolean }) {
   return (
-    <div className="flex items-center justify-between bg-cardMuted rounded-lg px-4 py-2 border border-border">
-      <div className="text-sm">{label}</div>
-      <div className={`text-sm font-semibold ${enabled ? "text-success" : "text-muted"}`}>
+    <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-cardMuted/60 px-4 py-3">
+      <div className="text-sm font-semibold">{label}</div>
+      <div className={`text-xs font-black uppercase tracking-[0.12em] ${enabled ? "text-success" : "text-muted"}`}>
         {enabled ? "ON" : "OFF"}
       </div>
     </div>
@@ -58,9 +59,9 @@ function ToggleRow({ label, enabled }: { label: string; enabled: boolean }) {
 
 function StatusRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between bg-cardMuted rounded-lg px-4 py-2 border border-border">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-cardMuted/60 px-4 py-3">
       <div className="text-sm text-muted">{label}</div>
-      <div className="text-sm font-semibold text-foreground">{value}</div>
+      <div className="truncate text-right text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }

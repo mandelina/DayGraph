@@ -6,6 +6,9 @@ import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
 import { getCollectorStatusIssue } from "../../../app/providers/useCollectorStatus";
 import { TopAppHero } from "../../../widgets/today/TopAppHero";
 import { RemainingAppsTable } from "../../../widgets/today/RemainingAppsTable";
+import { PageHeader } from "../../../shared/ui/PageHeader";
+import { MetricCard } from "../../../shared/ui/MetricCard";
+import { formatSeconds } from "../../../shared/lib/time";
 
 type Props = {
   apps: AppActivity[];
@@ -23,19 +26,24 @@ export function TodayPage({
   collectorStatus,
 }: Props) {
   const [hero, ...rest] = apps;
+  const totalActiveSeconds = apps.reduce(
+    (total, app) => total + app.activeSeconds,
+    0,
+  );
+  const totalClicks = apps.reduce((total, app) => total + app.clickCount, 0);
+  const totalKeypress = apps.reduce(
+    (total, app) => total + app.keypressCount,
+    0,
+  );
   return (
-    <>
-      <header className="bg-primary text-surface px-4 py-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide font-semibold">
-            Today
-          </div>
-          <div className="text-2xl font-bold">오늘 집중한 앱</div>
-        </div>
-        <div className="text-sm text-surface/70">
-          Activity Intensity Dashboard
-        </div>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Today / Focus overview"
+        title="오늘 집중한 앱"
+        description="지금 하루의 에너지가 어디에 쌓였는지 한눈에 확인하세요."
+        meta={<>Live<br />Local only</>}
+        tone="warm"
+      />
       <ActivityStateNotice
         loadState={loadState}
         isUsingMockData={isUsingMockData}
@@ -43,16 +51,58 @@ export function TodayPage({
         collectorStatus={collectorStatus}
       />
       {hero ? (
-        <TopAppHero app={hero} />
+        <>
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <MetricCard
+              label="Active time"
+              value={formatSeconds(totalActiveSeconds)}
+              hint="수집된 전체 활동"
+              tone="warm"
+            />
+            <MetricCard
+              label="Apps"
+              value={apps.length}
+              hint="오늘 기록된 앱"
+              tone="violet"
+            />
+            <MetricCard
+              label="Clicks"
+              value={totalClicks}
+              hint="마우스 상호작용"
+              tone="blue"
+            />
+            <MetricCard
+              label="Keypress"
+              value={totalKeypress}
+              hint="키보드 상호작용"
+              tone="green"
+            />
+          </section>
+          <section className="grid gap-5 xl:grid-cols-5">
+            <div className="xl:col-span-3">
+              <TopAppHero app={hero} />
+            </div>
+            <div className="xl:col-span-2">
+              <RemainingAppsTable apps={rest} />
+            </div>
+          </section>
+        </>
       ) : (
-        <section className="bg-card rounded-xl p-6 text-center text-muted">
-          {loadState === "loading"
-            ? "활동 데이터를 불러오는 중입니다."
-            : "오늘 활동 데이터가 없습니다."}
+        <section className="surface-card flex min-h-64 flex-col items-center justify-center p-8 text-center">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-cardMuted text-2xl text-muted">
+            ◌
+          </div>
+          <div className="mt-4 text-lg font-bold text-foreground">
+            {loadState === "loading"
+              ? "활동 데이터를 불러오는 중입니다."
+              : "오늘 활동 데이터가 없습니다."}
+          </div>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-muted">
+            Collector가 실행되면 앱별 활동과 집중 점수가 이곳에 쌓입니다.
+          </p>
         </section>
       )}
-      <RemainingAppsTable apps={rest} />
-    </>
+    </div>
   );
 }
 
@@ -69,24 +119,29 @@ function ActivityStateNotice({
 }) {
   if (isUsingMockData) {
     return (
-      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
-        목업 데이터를 표시 중입니다.
+      <section className="status-banner status-banner-warning">
+        <span className="status-banner-dot" aria-hidden />
+        <span>목업 데이터를 표시 중입니다.</span>
       </section>
     );
   }
   if (loadState === "error") {
     return (
-      <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
-        Collector 데이터를 가져오지 못했습니다.
-        {errorMessage ? ` ${errorMessage}` : ""}
+      <section className="status-banner status-banner-danger">
+        <span className="status-banner-dot" aria-hidden />
+        <span>
+          Collector 데이터를 가져오지 못했습니다.
+          {errorMessage ? ` ${errorMessage}` : ""}
+        </span>
       </section>
     );
   }
   const issue = getCollectorStatusIssue(collectorStatus);
   if (issue) {
     return (
-      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
-        Collector가 일부 기능을 사용할 수 없습니다. {issue}
+      <section className="status-banner status-banner-warning">
+        <span className="status-banner-dot" aria-hidden />
+        <span>Collector가 일부 기능을 사용할 수 없습니다. {issue}</span>
       </section>
     );
   }

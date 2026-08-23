@@ -6,6 +6,20 @@
 
 @layer base {
   body {
-    @apply bg-surface text-foreground font-sans;
+    @apply min-w-[320px] bg-surface text-foreground font-sans antialiased;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 50%, transparent);
   }
 }

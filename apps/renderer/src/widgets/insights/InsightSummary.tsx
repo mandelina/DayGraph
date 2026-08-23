@@ -7,12 +7,14 @@ type Props = {
 
 export function InsightSummary({ summary }: Props) {
   return (
-    <section className="bg-card rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-3">Activity Summary</h2>
-      <p className="text-base font-semibold text-foreground mb-2">
+    <section className="surface-card relative overflow-hidden bg-gradient-to-br from-accent/20 via-card to-card p-6 sm:p-7">
+      <div className="eyebrow text-accentSoft">The short version</div>
+      <h2 className="mt-2 text-xl font-black tracking-tight">Activity Summary</h2>
+      <p className="mt-5 max-w-2xl text-xl font-black leading-8 text-foreground sm:text-2xl">
         {summary.highlight}
       </p>
-      <p className="text-sm text-muted">{summary.context}</p>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{summary.context}</p>
+      <div className="pointer-events-none absolute -bottom-16 -right-10 h-40 w-40 rounded-full border border-accent/25" />
     </section>
   );
 }

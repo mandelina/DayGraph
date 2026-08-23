@@ -13,9 +13,10 @@ type Props = {
 
 export function SystemStatusPanel({ status }: Props) {
   return (
-    <section className="bg-card rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">시스템 상태</h2>
-      <div className="space-y-3">
+    <section className="surface-card p-5 sm:p-6">
+      <div className="eyebrow text-muted">Runtime health</div>
+      <h2 className="mt-2 text-xl font-black tracking-tight">시스템 상태</h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
         <StatusRow label="Collector" value={status.collector} />
         <StatusRow label="마지막 동기화" value={status.lastSync} />
         <StatusRow label="Auto-update" value={status.autoUpdate} />
@@ -34,9 +35,9 @@ export function SystemStatusPanel({ status }: Props) {
 
 function StatusRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between bg-cardMuted rounded-lg px-4 py-2 border border-border">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-cardMuted/60 px-4 py-3">
       <div className="text-sm text-muted">{label}</div>
-      <div className="text-sm font-semibold text-foreground">{value}</div>
+      <div className="truncate text-right text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }

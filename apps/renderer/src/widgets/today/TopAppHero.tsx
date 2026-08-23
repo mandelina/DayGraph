@@ -1,6 +1,7 @@
 import { AppActivity } from "../../entities/activity/model";
 import { ACTIVITY_SCORE_WEIGHTS } from "../../entities/activity/lib/calculateScore";
 import { formatSeconds } from "../../shared/lib/time";
+import { AppIcon } from "../../shared/ui/AppIcon";
 
 type Props = {
   app: AppActivity;
@@ -27,31 +28,41 @@ export function TopAppHero({ app }: Props) {
   const total = segments.reduce((sum, seg) => sum + seg.value, 0) || 1;
 
   return (
-    <article className="bg-gradient-to-br from-card to-surfaceMuted text-foreground rounded-2xl p-6 shadow-2xl border border-border space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <span className="text-xs uppercase tracking-wide text-muted">
-            #1 Today Focus
-          </span>
-          <div className="text-3xl font-bold mt-1">{app.appName}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-xs text-muted">Activity Score</div>
-          <div className="text-4xl font-black text-primary">
-            {app.score.toFixed(1)}
+    <article className="surface-card relative h-full overflow-hidden bg-gradient-to-br from-card via-card to-surfaceMuted p-6 text-foreground shadow-xl sm:p-7">
+      <div className="relative z-10 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="eyebrow text-primary">#1 Today focus</div>
+          <div className="mt-4 flex items-center gap-3">
+            <AppIcon
+              appName={app.appName}
+              appPath={null}
+              bundleId={null}
+              size={48}
+            />
+            <div className="truncate text-3xl font-black tracking-tight sm:text-4xl">
+              {app.appName}
+            </div>
           </div>
-          <div className="text-xs text-muted mt-1">
-            Active {formatSeconds(app.activeSeconds)}
+        </div>
+        <div className="shrink-0 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-right">
+          <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">
+            Score
+          </div>
+          <div className="mt-1 text-3xl font-black text-primary sm:text-4xl">
+            {app.score.toFixed(1)}
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 text-center">
+      <div className="relative z-10 mt-8 grid grid-cols-3 gap-2 text-center sm:gap-3">
         <StatCard label="Clicks" value={app.clickCount} />
         <StatCard label="Keys" value={app.keypressCount} />
         <StatCard label="Active Time" value={formatSeconds(app.activeSeconds)} />
       </div>
-      <div>
-        <div className="text-xs text-muted mb-2">점수 구성 비율</div>
+      <div className="relative z-10 mt-7">
+        <div className="mb-2 flex items-center justify-between gap-4">
+          <div className="text-xs font-semibold text-muted">점수 구성 비율</div>
+          <div className="text-xs text-muted">activity mix</div>
+        </div>
         <div className="flex h-3 overflow-hidden rounded-full bg-cardMuted">
           {segments.map((seg) => (
             <div
@@ -62,7 +73,7 @@ export function TopAppHero({ app }: Props) {
             />
           ))}
         </div>
-        <div className="flex justify-between text-xs text-muted mt-1">
+        <div className="mt-2 flex justify-between text-[11px] text-muted">
           {segments.map((seg) => (
             <span key={seg.label}>
               {seg.label}: {((seg.value / total) * 100).toFixed(0)}%
@@ -70,15 +81,18 @@ export function TopAppHero({ app }: Props) {
           ))}
         </div>
       </div>
+      <div className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 rounded-full border border-primary/10 bg-primary/5" />
     </article>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-cardMuted rounded-lg p-3">
-      <div className="text-xs text-muted mb-1">{label}</div>
-      <div className="text-xl font-semibold text-foreground">{value}</div>
+    <div className="rounded-2xl border border-border/70 bg-cardMuted/75 p-3">
+      <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted">
+        {label}
+      </div>
+      <div className="text-lg font-bold text-foreground sm:text-xl">{value}</div>
     </div>
   );
 }

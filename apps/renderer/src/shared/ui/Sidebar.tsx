@@ -9,42 +9,115 @@ type Props = {
 
 export function Sidebar({ active, onSelect, theme, setTheme }: Props) {
   return (
-    <aside className="w-64 border-r border-border bg-surfaceMuted/90 backdrop-blur-xl p-6 hidden md:flex flex-col gap-6">
-      <div>
-        <div className="text-2xl font-bold text-foreground">DayGraph</div>
-        <div className="text-xs text-muted">Active Window Intelligence</div>
-      </div>
-      <nav className="space-y-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive = item.label === active;
-          return (
-            <button
+    <>
+      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col gap-8 border-r border-border/70 bg-surfaceMuted/65 p-6 backdrop-blur-xl md:flex">
+        <div className="flex items-start gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary text-xl font-black text-surface shadow-lg shadow-primary/15">
+            DG
+          </div>
+          <div>
+            <div className="text-xl font-black tracking-tight text-foreground">
+              DayGraph
+            </div>
+            <div className="mt-1 text-xs leading-5 text-muted">
+              Active Window Intelligence
+            </div>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border/70 bg-card/60 p-4">
+          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-muted">
+            Your workspace
+          </div>
+          <div className="mt-2 text-sm font-semibold text-foreground">
+            A calmer way to review your day.
+          </div>
+        </div>
+        <nav className="space-y-2" aria-label="Primary navigation">
+          {NAV_ITEMS.map((item) => (
+            <NavButton
               key={item.label}
-              onClick={() => onSelect(item.label)}
-              className={`w-full text-left rounded-xl px-4 py-3 transition border ${
-                isActive
-                  ? "bg-primary text-surface border-primary"
-                  : "border-border bg-card text-foreground"
-              }`}
-            >
-              <div className="text-sm font-semibold">{item.label}</div>
-              <div
-                className={`text-xs ${
-                  isActive ? "text-surface/70" : "text-muted"
-                }`}
-              >
-                {item.description}
-              </div>
-            </button>
-          );
-        })}
-      </nav>
-      <button
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="mt-auto w-full rounded-xl border border-border bg-card py-2 text-sm text-foreground transition hover:bg-cardMuted"
+              item={item}
+              active={active}
+              onSelect={onSelect}
+            />
+          ))}
+        </nav>
+        <button
+          type="button"
+          aria-label="Toggle theme"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="mt-auto flex w-full items-center justify-between rounded-2xl border border-border bg-card/70 px-4 py-3 text-left text-sm text-foreground transition hover:-translate-y-0.5 hover:bg-cardMuted"
+        >
+          <span className="text-muted">Appearance</span>
+          <span className="font-bold">{theme === "dark" ? "Dark" : "Light"}</span>
+        </button>
+      </aside>
+      <nav
+        className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-5 gap-1 rounded-2xl border border-border/80 bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden"
+        aria-label="Mobile navigation"
       >
-        Theme: {theme === "dark" ? "Dark" : "Light"}
-      </button>
-    </aside>
+        {NAV_ITEMS.map((item) => (
+          <NavButton
+            key={item.label}
+            item={item}
+            active={active}
+            onSelect={onSelect}
+            mobile
+          />
+        ))}
+      </nav>
+    </>
   );
 }
+
+function NavButton({
+  item,
+  active,
+  onSelect,
+  mobile = false,
+}: {
+  item: (typeof NAV_ITEMS)[number];
+  active: NavItem;
+  onSelect: (item: NavItem) => void;
+  mobile?: boolean;
+}) {
+  const isActive = item.label === active;
+  const glyph = NAV_GLYPHS[item.label];
+  return (
+    <button
+      type="button"
+      aria-current={isActive ? "page" : undefined}
+      aria-label={mobile ? item.label : `${item.label} ${item.description}`}
+      onClick={() => onSelect(item.label)}
+      className={`transition ${
+        mobile
+          ? "flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold"
+          : "flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left"
+      } ${
+        isActive
+          ? mobile
+            ? "bg-foreground text-surface"
+            : "border-foreground bg-foreground text-surface shadow-lg shadow-foreground/10"
+          : mobile
+            ? "text-muted hover:bg-cardMuted"
+            : "border-transparent text-foreground hover:border-border hover:bg-card"
+      }`}
+    >
+      <span className={mobile ? "text-base leading-none" : "grid h-8 w-8 place-items-center rounded-xl bg-cardMuted text-sm"}>
+        {glyph}
+      </span>
+      <span className={mobile ? "truncate" : "min-w-0"}>
+        <span className="block text-sm font-bold">{item.label}</span>
+        {!mobile ? <span className="mt-0.5 block text-xs opacity-60">{item.description}</span> : null}
+      </span>
+    </button>
+  );
+}
+
+const NAV_GLYPHS: Record<NavItem, string> = {
+  Today: "◉",
+  Timeline: "◌",
+  Weekly: "▦",
+  Insights: "✦",
+  Settings: "⚙",
+};

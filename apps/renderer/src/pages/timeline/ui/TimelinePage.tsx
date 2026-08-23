@@ -15,6 +15,7 @@ import type { TimelineFilterMode } from "../../../entities/activity/model";
 import { TimelineFilters } from "../../../widgets/timeline/Filters";
 import { TimelineStrip } from "../../../widgets/timeline/Strip";
 import { TimelineSessionsList } from "../../../widgets/timeline/SessionsList";
+import { PageHeader } from "../../../shared/ui/PageHeader";
 
 type Props = {
   slices: TimelineSlice[];
@@ -46,25 +47,21 @@ export function TimelinePage({
   );
 
   return (
-    <>
-      <header className="bg-accent text-foreground px-4 py-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide font-semibold text-foreground/80">
-            Timeline
-          </div>
-          <div className="text-2xl font-bold">집중도 시간대 분석</div>
-        </div>
-        <div className="text-sm text-foreground/70">
-          정밀 Activity Timeline
-        </div>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Timeline / Activity rhythm"
+        title="집중도 시간대 분석"
+        description="하루의 흐름을 5분 단위로 훑고, 집중 구간과 전환 지점을 찾아보세요."
+        meta={<>5 min<br />Buckets</>}
+        tone="violet"
+      />
       <TimelineStateNotice
         loadState={loadState}
         isUsingMockData={isUsingMockData}
         errorMessage={errorMessage}
         collectorStatus={collectorStatus}
       />
-      <section className="bg-card rounded-xl p-4 space-y-4">
+      <section className="surface-card space-y-5 p-5 sm:p-6">
         <TimelineFilters
           activeFilter={activeFilter}
           counts={filterCounts}
@@ -73,7 +70,7 @@ export function TimelinePage({
         <TimelineStrip buckets={filteredBuckets} />
       </section>
       <TimelineSessionsList slices={filteredSlices} />
-    </>
+    </div>
   );
 }
 
@@ -90,24 +87,29 @@ function TimelineStateNotice({
 }) {
   if (isUsingMockData) {
     return (
-      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
-        목업 타임라인을 표시 중입니다.
+      <section className="status-banner status-banner-warning">
+        <span className="status-banner-dot" aria-hidden />
+        <span>목업 타임라인을 표시 중입니다.</span>
       </section>
     );
   }
   if (loadState === "error") {
     return (
-      <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
-        Collector 데이터를 가져오지 못했습니다.
-        {errorMessage ? ` ${errorMessage}` : ""}
+      <section className="status-banner status-banner-danger">
+        <span className="status-banner-dot" aria-hidden />
+        <span>
+          Collector 데이터를 가져오지 못했습니다.
+          {errorMessage ? ` ${errorMessage}` : ""}
+        </span>
       </section>
     );
   }
   const issue = getCollectorStatusIssue(collectorStatus);
   if (issue) {
     return (
-      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
-        Collector가 일부 기능을 사용할 수 없습니다. {issue}
+      <section className="status-banner status-banner-warning">
+        <span className="status-banner-dot" aria-hidden />
+        <span>Collector가 일부 기능을 사용할 수 없습니다. {issue}</span>
       </section>
     );
   }

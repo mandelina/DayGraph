@@ -9,7 +9,7 @@ type Props = {
 export function TimelineStrip({ buckets }: Props) {
   if (buckets.length === 0) {
     return (
-      <div className="h-32 rounded-xl border border-dashed border-border flex items-center justify-center text-sm text-muted">
+      <div className="flex h-32 items-center justify-center rounded-2xl border border-dashed border-border text-sm text-muted">
         최근 데이터가 없어 타임라인을 렌더링할 수 없습니다.
       </div>
     );
@@ -21,11 +21,12 @@ export function TimelineStrip({ buckets }: Props) {
 
   return (
     <div className="space-y-2">
-      <div className="text-xs text-muted">
-        5분 버킷 기준 Activity Timeline (대표 앱 기준, hover로 상세 확인)
+      <div className="flex items-center justify-between gap-4 text-xs text-muted">
+        <span>5분 버킷 기준 Activity Timeline</span>
+        <span className="hidden sm:inline">hover로 상세 확인</span>
       </div>
       <div
-        className="grid gap-[1px] rounded-xl border border-border p-[3px] bg-card"
+        className="grid gap-1 rounded-2xl border border-border/70 bg-surfaceMuted/60 p-2"
         style={gridTemplate}
       >
         {buckets.map((bucket) => {
@@ -42,7 +43,7 @@ export function TimelineStrip({ buckets }: Props) {
           return (
             <div
               key={bucket.bucketStart}
-              className="relative h-20 rounded-md overflow-hidden border border-border/60 bg-muted transition-transform hover:-translate-y-0.5"
+              className="relative h-20 overflow-hidden rounded-xl border border-border/60 bg-muted transition-transform hover:-translate-y-0.5"
               style={{ background }}
               title={tooltip}
             >

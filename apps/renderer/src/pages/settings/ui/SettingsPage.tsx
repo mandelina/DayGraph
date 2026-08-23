@@ -5,6 +5,7 @@ import { ScoreWeightsPanel } from "../../../widgets/settings/ScoreWeightsPanel";
 import { DataPrivacyPanel } from "../../../widgets/settings/DataPrivacyPanel";
 import { UIOptionsPanel } from "../../../widgets/settings/UIOptionsPanel";
 import { SystemStatusPanel } from "../../../widgets/settings/SystemStatusPanel";
+import { PageHeader } from "../../../shared/ui/PageHeader";
 
 export function SettingsPage({
   theme,
@@ -30,34 +31,34 @@ export function SettingsPage({
     collectorStatus?.reachable === true && collectorStatus.status !== "degraded";
 
   return (
-    <>
-      <header className="bg-primary text-surface px-4 py-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide font-semibold">
-            Settings
-          </div>
-          <div className="text-2xl font-bold">DayGraph 기준과 제어</div>
-        </div>
-        <div className="text-sm text-surface/70">환경 설정</div>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Settings / Trust center"
+        title="DayGraph 기준과 제어"
+        description="활동 점수의 기준과 로컬 데이터 상태를 확인하고 앱 경험을 조정하세요."
+        meta={<>Private<br />By default</>}
+        tone="neutral"
+      />
       <ScoreWeightsPanel weights={ACTIVITY_SCORE_WEIGHTS} />
-      <DataPrivacyPanel
-        options={{
-          dataDir: collectorStatus?.dataDir ?? "확인할 수 없음",
-          collector: collectorRunning,
-          inputBackend: collectorStatus?.inputBackend ?? "unknown",
-          activeWindowBackend:
-            collectorStatus?.activeWindowBackend ?? "unknown",
-        }}
-        openError={openError}
-        onOpenDataDir={openDataDir}
-      />
-      <UIOptionsPanel
-        options={{
-          theme: theme === "dark" ? "Dark" : "Light",
-          density: "Detailed",
-        }}
-      />
+      <div className="grid gap-5 xl:grid-cols-2">
+        <DataPrivacyPanel
+          options={{
+            dataDir: collectorStatus?.dataDir ?? "확인할 수 없음",
+            collector: collectorRunning,
+            inputBackend: collectorStatus?.inputBackend ?? "unknown",
+            activeWindowBackend:
+              collectorStatus?.activeWindowBackend ?? "unknown",
+          }}
+          openError={openError}
+          onOpenDataDir={openDataDir}
+        />
+        <UIOptionsPanel
+          options={{
+            theme: theme === "dark" ? "Dark" : "Light",
+            density: "Detailed",
+          }}
+        />
+      </div>
       <SystemStatusPanel
         status={{
           collector: getCollectorLabel(collectorStatus),
@@ -77,7 +78,7 @@ export function SettingsPage({
             null,
         }}
       />
-    </>
+    </div>
   );
 }
 

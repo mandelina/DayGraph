@@ -7,16 +7,17 @@ type Props = {
 
 export function AppBehaviorInsights({ insights }: Props) {
   return (
-    <section className="bg-card rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-4">App Behavior Insights</h2>
-      <div className="space-y-3">
+    <section className="surface-card p-5 sm:p-6">
+      <div className="eyebrow text-muted">App behavior</div>
+      <h2 className="mt-2 text-xl font-black tracking-tight">App Behavior Insights</h2>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
         {insights.map((insight) => (
           <div
             key={insight.title}
-            className="bg-cardMuted rounded-lg border border-border p-4"
+            className="rounded-2xl border border-border/70 bg-cardMuted/60 p-4"
           >
-            <div className="text-sm font-semibold">{insight.title}</div>
-            <p className="text-sm text-muted mt-1">{insight.detail}</p>
+            <div className="text-sm font-bold">{insight.title}</div>
+            <p className="mt-2 text-sm leading-6 text-muted">{insight.detail}</p>
           </div>
         ))}
       </div>

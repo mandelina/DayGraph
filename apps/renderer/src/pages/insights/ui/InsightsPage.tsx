@@ -7,6 +7,7 @@ import {
 import { FocusPatternGrid } from "../../../widgets/insights/FocusPatternGrid";
 import { AppBehaviorInsights } from "../../../widgets/insights/AppBehaviorInsights";
 import { InsightSummary } from "../../../widgets/insights/InsightSummary";
+import { PageHeader } from "../../../shared/ui/PageHeader";
 
 export function InsightsPage() {
   const range = useMemo(() => getWeeklyQueryRange(), []);
@@ -21,16 +22,14 @@ export function InsightsPage() {
   );
 
   return (
-    <>
-      <header className="bg-accent text-foreground px-4 py-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide font-semibold text-foreground/80">
-            Insights
-          </div>
-          <div className="text-2xl font-bold">집중 패턴 자동 해석</div>
-        </div>
-        <div className="text-sm text-foreground/70">해석과 회고</div>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Insights / Reflection"
+        title="집중 패턴 자동 해석"
+        description="수집된 활동에서 반복되는 리듬을 찾아 다음 행동으로 연결합니다."
+        meta={<>Weekly<br />Reflection</>}
+        tone="violet"
+      />
       <InsightStateNotice loadState={loadState} errorMessage={errorMessage} />
       {report.hasData ? (
         <>
@@ -39,11 +38,11 @@ export function InsightsPage() {
           <AppBehaviorInsights insights={report.appInsights} />
         </>
       ) : loadState !== "loading" ? (
-        <section className="bg-card rounded-xl p-6 text-center text-muted">
+        <section className="surface-card flex min-h-56 items-center justify-center p-8 text-center text-muted">
           이번 주 활동 데이터가 없어 인사이트를 만들 수 없습니다.
         </section>
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -56,16 +55,20 @@ function InsightStateNotice({
 }) {
   if (loadState === "loading") {
     return (
-      <section className="bg-card rounded-xl p-3 text-sm text-muted">
-        활동 데이터를 분석하는 중입니다.
+      <section className="status-banner status-banner-neutral">
+        <span className="status-banner-dot" aria-hidden />
+        <span>활동 데이터를 분석하는 중입니다.</span>
       </section>
     );
   }
   if (loadState === "error") {
     return (
-      <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
-        인사이트 데이터를 가져오지 못했습니다.
-        {errorMessage ? ` ${errorMessage}` : ""}
+      <section className="status-banner status-banner-danger">
+        <span className="status-banner-dot" aria-hidden />
+        <span>
+          인사이트 데이터를 가져오지 못했습니다.
+          {errorMessage ? ` ${errorMessage}` : ""}
+        </span>
       </section>
     );
   }

@@ -7,6 +7,7 @@ import {
 import { WeeklySummary } from "../../../widgets/weekly/WeeklySummary";
 import { WeeklyTrend } from "../../../widgets/weekly/WeeklyTrend";
 import { WeeklyInsights } from "../../../widgets/weekly/WeeklyInsights";
+import { PageHeader } from "../../../shared/ui/PageHeader";
 
 export function WeeklyPage() {
   const range = useMemo(() => getWeeklyQueryRange(), []);
@@ -20,29 +21,29 @@ export function WeeklyPage() {
   );
 
   return (
-    <>
-      <header className="bg-primary text-surface px-4 py-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide font-semibold">
-            Weekly
-          </div>
-          <div className="text-2xl font-bold">이번 주 집중 패턴 요약</div>
-        </div>
-        <div className="text-sm text-surface/70">패턴 비교</div>
-      </header>
+    <div className="space-y-5">
+      <PageHeader
+        eyebrow="Weekly / Pattern review"
+        title="이번 주 집중 패턴 요약"
+        description="요일별 리듬과 앱별 변화를 비교해 다음 주의 흐름을 준비하세요."
+        meta={<>This week<br />Compare</>}
+        tone="warm"
+      />
       <WeeklyStateNotice loadState={loadState} errorMessage={errorMessage} />
       {report.hasData ? (
         <>
           <WeeklySummary summary={report.dailySummary} />
-          <WeeklyTrend trend={report.appTrend} />
-          <WeeklyInsights insights={report.insights} />
+          <div className="grid gap-5 xl:grid-cols-2">
+            <WeeklyTrend trend={report.appTrend} />
+            <WeeklyInsights insights={report.insights} />
+          </div>
         </>
       ) : loadState !== "loading" ? (
-        <section className="bg-card rounded-xl p-6 text-center text-muted">
+        <section className="surface-card flex min-h-56 items-center justify-center p-8 text-center text-muted">
           이번 주 활동 데이터가 없습니다.
         </section>
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -55,16 +56,20 @@ function WeeklyStateNotice({
 }) {
   if (loadState === "loading") {
     return (
-      <section className="bg-card rounded-xl p-3 text-sm text-muted">
-        주간 활동 데이터를 불러오는 중입니다.
+      <section className="status-banner status-banner-neutral">
+        <span className="status-banner-dot" aria-hidden />
+        <span>주간 활동 데이터를 불러오는 중입니다.</span>
       </section>
     );
   }
   if (loadState === "error") {
     return (
-      <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
-        주간 활동 데이터를 가져오지 못했습니다.
-        {errorMessage ? ` ${errorMessage}` : ""}
+      <section className="status-banner status-banner-danger">
+        <span className="status-banner-dot" aria-hidden />
+        <span>
+          주간 활동 데이터를 가져오지 못했습니다.
+          {errorMessage ? ` ${errorMessage}` : ""}
+        </span>
       </section>
     );
   }

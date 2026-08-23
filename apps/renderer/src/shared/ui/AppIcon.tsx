@@ -70,7 +70,9 @@ export function AppIcon({ appName, appPath, bundleId, size = 32 }: Props) {
       className="rounded-md bg-muted text-foreground/80 font-semibold grid place-items-center shadow-sm"
       style={{ width: size, height: size }}
     >
-      <span className="text-xs">{appName}</span>
+      <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-xs">
+        {appName}
+      </span>
     </div>
   );
 }
