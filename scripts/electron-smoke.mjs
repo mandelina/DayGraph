@@ -57,6 +57,7 @@ const result = await evaluate(`(async()=>{
     collector: false,
     todayThumbnails: false,
     workspaceThumbnail: false,
+    activeNavIcon: false,
     tabs: {},
   };
   const status = await window.api?.getCollectorStatus?.();
@@ -81,6 +82,16 @@ const result = await evaluate(`(async()=>{
         emptyToday || document.querySelectorAll("main img[alt]").length > 0;
       checks.workspaceThumbnail =
         emptyToday || document.querySelectorAll("aside img[alt]").length > 0;
+    }
+    if (tab === "Settings") {
+      const activeNav = document.querySelector(
+        'aside button[aria-current="page"]',
+      );
+      const activeIcon = activeNav?.querySelector(":scope > span");
+      if (activeIcon) {
+        const iconStyle = getComputedStyle(activeIcon);
+        checks.activeNavIcon = iconStyle.color !== iconStyle.backgroundColor;
+      }
     }
   }
   return { checks, status };

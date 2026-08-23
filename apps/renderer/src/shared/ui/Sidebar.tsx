@@ -131,7 +131,18 @@ function NavButton({
             : "border-transparent text-foreground hover:border-border hover:bg-card"
       }`}
     >
-      <span className={mobile ? "text-base leading-none" : "grid h-8 w-8 place-items-center rounded-xl bg-cardMuted text-sm"}>
+      <span
+        aria-hidden="true"
+        className={
+          mobile
+            ? "text-base leading-none"
+            : `grid h-8 w-8 place-items-center rounded-xl text-sm ${
+                isActive
+                  ? "bg-surface text-foreground"
+                  : "bg-cardMuted text-foreground"
+              }`
+        }
+      >
         {glyph}
       </span>
       <span className={mobile ? "truncate" : "min-w-0"}>
