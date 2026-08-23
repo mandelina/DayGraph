@@ -4,6 +4,8 @@ import {
   TimelineSlice,
   TimelineBucket,
 } from "../../../entities/activity/model";
+import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
+import { getCollectorStatusIssue } from "../../../app/providers/useCollectorStatus";
 import { bucketizeTimeline } from "../../../app/providers/useActivityData";
 import {
   filterTimelineSlices,
@@ -20,6 +22,7 @@ type Props = {
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
+  collectorStatus: CollectorStatusResponse | null;
 };
 
 export function TimelinePage({
@@ -28,6 +31,7 @@ export function TimelinePage({
   loadState,
   isUsingMockData,
   errorMessage,
+  collectorStatus,
 }: Props) {
   const [activeFilter, setActiveFilter] =
     useState<TimelineFilterMode>("all");
@@ -58,6 +62,7 @@ export function TimelinePage({
         loadState={loadState}
         isUsingMockData={isUsingMockData}
         errorMessage={errorMessage}
+        collectorStatus={collectorStatus}
       />
       <section className="bg-card rounded-xl p-4 space-y-4">
         <TimelineFilters
@@ -76,10 +81,12 @@ function TimelineStateNotice({
   loadState,
   isUsingMockData,
   errorMessage,
+  collectorStatus,
 }: {
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
+  collectorStatus: CollectorStatusResponse | null;
 }) {
   if (isUsingMockData) {
     return (
@@ -93,6 +100,14 @@ function TimelineStateNotice({
       <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
         Collector 데이터를 가져오지 못했습니다.
         {errorMessage ? ` ${errorMessage}` : ""}
+      </section>
+    );
+  }
+  const issue = getCollectorStatusIssue(collectorStatus);
+  if (issue) {
+    return (
+      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
+        Collector가 일부 기능을 사용할 수 없습니다. {issue}
       </section>
     );
   }

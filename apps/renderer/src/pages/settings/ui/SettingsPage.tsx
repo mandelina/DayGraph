@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
 import { ACTIVITY_SCORE_WEIGHTS } from "../../../entities/activity/lib/calculateScore";
 import { ScoreWeightsPanel } from "../../../widgets/settings/ScoreWeightsPanel";
@@ -6,8 +6,13 @@ import { DataPrivacyPanel } from "../../../widgets/settings/DataPrivacyPanel";
 import { UIOptionsPanel } from "../../../widgets/settings/UIOptionsPanel";
 import { SystemStatusPanel } from "../../../widgets/settings/SystemStatusPanel";
 
-export function SettingsPage({ theme }: { theme: "dark" | "light" }) {
-  const collectorStatus = useCollectorStatus();
+export function SettingsPage({
+  theme,
+  collectorStatus,
+}: {
+  theme: "dark" | "light";
+  collectorStatus: CollectorStatusResponse | null;
+}) {
   const [openError, setOpenError] = useState<string | null>(null);
 
   const openDataDir = () => {
@@ -74,65 +79,6 @@ export function SettingsPage({ theme }: { theme: "dark" | "light" }) {
       />
     </>
   );
-}
-
-function useCollectorStatus() {
-  const [status, setStatus] = useState<CollectorStatusResponse | null>(null);
-
-  useEffect(() => {
-    let disposed = false;
-
-    const fetchStatus = () => {
-      const request = window.api?.getCollectorStatus?.();
-      if (!request) {
-        if (!disposed) setStatus(createUnavailableStatus("Electron API unavailable"));
-        return;
-      }
-      request
-        .then((nextStatus) => {
-          if (!disposed) setStatus(nextStatus);
-        })
-        .catch((err: unknown) => {
-          if (!disposed) setStatus(createUnavailableStatus(formatError(err)));
-        });
-    };
-
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 5000);
-    return () => {
-      disposed = true;
-      clearInterval(interval);
-    };
-  }, []);
-
-  return status;
-}
-
-function createUnavailableStatus(error: string): CollectorStatusResponse {
-  return {
-    ok: false,
-    status: "degraded",
-    reachable: false,
-    url: "",
-    dataDir: null,
-    dataQuality: "unavailable",
-    activeWindowBackend: null,
-    activeWindowBackendError: null,
-    platform: null,
-    inputBackend: null,
-    inputBackendError: null,
-    displayBackend: null,
-    displayBackendError: null,
-    pid: null,
-    uptimeSeconds: null,
-    tickRunning: false,
-    skippedTicks: 0,
-    lastTickAt: null,
-    lastTickDurationMs: null,
-    lastTickError: null,
-    timestamp: new Date().toISOString(),
-    error,
-  };
 }
 
 function getCollectorLabel(status: CollectorStatusResponse | null) {

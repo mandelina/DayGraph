@@ -7,6 +7,7 @@ import { InsightsPage } from "../pages/insights/ui/InsightsPage";
 import { SettingsPage } from "../pages/settings/ui/SettingsPage";
 import { NAV_ITEMS, NavItem } from "./navigation";
 import { useActivityData } from "./providers/useActivityData";
+import { useCollectorStatus } from "./providers/useCollectorStatus";
 import { ThemeToggle } from "../shared/ui/ThemeToggle";
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
     isUsingMockData,
     errorMessage,
   } = useActivityData();
+  const collectorStatus = useCollectorStatus();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -54,6 +56,7 @@ export default function App() {
             loadState={loadState}
             isUsingMockData={isUsingMockData}
             errorMessage={errorMessage}
+            collectorStatus={collectorStatus}
           />
         )}
         {activeTab === "Timeline" && (
@@ -63,11 +66,14 @@ export default function App() {
             loadState={loadState}
             isUsingMockData={isUsingMockData}
             errorMessage={errorMessage}
+            collectorStatus={collectorStatus}
           />
         )}
         {activeTab === "Weekly" && <WeeklyPage />}
         {activeTab === "Insights" && <InsightsPage />}
-        {activeTab === "Settings" && <SettingsPage theme={theme} />}
+        {activeTab === "Settings" && (
+          <SettingsPage theme={theme} collectorStatus={collectorStatus} />
+        )}
       </main>
     </div>
   );

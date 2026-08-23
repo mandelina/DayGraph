@@ -2,6 +2,8 @@ import {
   ActivityLoadState,
   AppActivity,
 } from "../../../entities/activity/model";
+import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
+import { getCollectorStatusIssue } from "../../../app/providers/useCollectorStatus";
 import { TopAppHero } from "../../../widgets/today/TopAppHero";
 import { RemainingAppsTable } from "../../../widgets/today/RemainingAppsTable";
 
@@ -10,6 +12,7 @@ type Props = {
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
+  collectorStatus: CollectorStatusResponse | null;
 };
 
 export function TodayPage({
@@ -17,6 +20,7 @@ export function TodayPage({
   loadState,
   isUsingMockData,
   errorMessage,
+  collectorStatus,
 }: Props) {
   const [hero, ...rest] = apps;
   return (
@@ -36,6 +40,7 @@ export function TodayPage({
         loadState={loadState}
         isUsingMockData={isUsingMockData}
         errorMessage={errorMessage}
+        collectorStatus={collectorStatus}
       />
       {hero ? (
         <TopAppHero app={hero} />
@@ -55,10 +60,12 @@ function ActivityStateNotice({
   loadState,
   isUsingMockData,
   errorMessage,
+  collectorStatus,
 }: {
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
+  collectorStatus: CollectorStatusResponse | null;
 }) {
   if (isUsingMockData) {
     return (
@@ -72,6 +79,14 @@ function ActivityStateNotice({
       <section className="bg-card rounded-xl border border-danger/40 p-3 text-sm text-danger">
         Collector 데이터를 가져오지 못했습니다.
         {errorMessage ? ` ${errorMessage}` : ""}
+      </section>
+    );
+  }
+  const issue = getCollectorStatusIssue(collectorStatus);
+  if (issue) {
+    return (
+      <section className="bg-card rounded-xl border border-warning/40 p-3 text-sm text-warning">
+        Collector가 일부 기능을 사용할 수 없습니다. {issue}
       </section>
     );
   }
