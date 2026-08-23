@@ -5,16 +5,12 @@ import { AppIcon } from "./AppIcon";
 type Props = {
   active: NavItem;
   onSelect: (item: NavItem) => void;
-  theme: "dark" | "light";
-  setTheme: (value: "dark" | "light") => void;
   workspaceApp?: AppActivity;
 };
 
 export function Sidebar({
   active,
   onSelect,
-  theme,
-  setTheme,
   workspaceApp,
 }: Props) {
   return (
@@ -70,15 +66,6 @@ export function Sidebar({
             />
           ))}
         </nav>
-        <button
-          type="button"
-          aria-label="Toggle theme"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="mt-auto flex w-full items-center justify-between rounded-2xl border border-border bg-card/70 px-4 py-3 text-left text-sm text-foreground transition hover:-translate-y-0.5 hover:bg-cardMuted"
-        >
-          <span className="text-muted">Appearance</span>
-          <span className="font-bold">{theme === "dark" ? "Dark" : "Light"}</span>
-        </button>
       </aside>
       <nav
         className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-5 gap-1 rounded-2xl border border-border/80 bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl md:hidden"

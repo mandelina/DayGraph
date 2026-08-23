@@ -46,8 +46,6 @@ export default function App() {
       <Sidebar
         active={activeTab}
         onSelect={setActiveTab}
-        theme={theme}
-        setTheme={setTheme}
         workspaceApp={todayStats[0]}
       />
       <main className="min-w-0 flex-1 overflow-y-auto px-4 pb-24 pt-4 sm:px-6 sm:pb-8 lg:px-10 lg:py-8">

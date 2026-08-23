@@ -61,10 +61,12 @@ const result = await evaluate(`(async()=>{
     calendar: false,
     activeCalendarColor: false,
     dateSelection: false,
+    themeToggle: false,
     tabs: {},
   };
   const status = await window.api?.getCollectorStatus?.();
   checks.collector = status?.reachable === true && status.dataQuality === "real";
+  checks.themeToggle = document.querySelectorAll('button[aria-label="Toggle theme"]').length === 1;
   for (const [tab, heading] of Object.entries(expectedTabs)) {
     const button = [...document.querySelectorAll("button")]
       .find((item) => item.innerText.includes(tab));
