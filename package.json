@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "description": "DayGraph monorepo (Electron + React + Collector)",
   "engines": {
-    "node": ">=22 <23"
+    "node": ">=24 <25"
   },
-  "packageManager": "pnpm@9.15.1",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "install:all": "pnpm install",
     "dev": "concurrently -k -n collector,app -c blue,green \"pnpm collector\" \"pnpm -C apps/electron dev\"",
@@ -21,13 +21,14 @@
     "collector": "pnpm -C packages/collector start"
   },
   "devDependencies": {
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.2",
-    "@typescript-eslint/parser": "^7.18.0",
-    "concurrently": "^8.2.2",
-    "dotenv": "^16.4.5",
-    "eslint": "^8.57.1",
-    "typescript": "~5.4.5",
-    "vitest": "^1.6.1"
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@typescript-eslint/parser": "^8.67.0",
+    "concurrently": "^10.0.5",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.9.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
   }
 }

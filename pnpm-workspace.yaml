@@ -1,4 +1,11 @@
 packages:
   - apps/*
   - packages/*
-
+allowBuilds:
+  better-sqlite3: true
+  electron: true
+  esbuild: true
+  extract-file-icon: true
+  get-windows: true
+  node-window-manager: true
+  uiohook-napi: true

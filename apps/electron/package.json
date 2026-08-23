@@ -14,11 +14,11 @@
     "stop": "pkill -f electron-vite || taskkill /IM electron-vite.exe /F || true"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "electron": "^30.0.0",
-    "electron-vite": "^2.1.0",
-    "typescript": "~5.4.5"
+    "electron": "^43.4.1",
+    "electron-vite": "^5.0.0",
+    "typescript": "^6.0.3"
   }
 }
