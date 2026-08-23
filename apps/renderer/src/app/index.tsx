@@ -9,9 +9,12 @@ import type { NavItem } from "./navigation";
 import { useActivityData } from "./providers/useActivityData";
 import { useCollectorStatus } from "./providers/useCollectorStatus";
 import { ThemeToggle } from "../shared/ui/ThemeToggle";
+import { CalendarPicker } from "../shared/ui/CalendarPicker";
+import { formatLocalDateISO } from "../shared/lib/time";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavItem>("Today");
+  const [selectedDate, setSelectedDate] = useState(() => formatLocalDateISO());
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     return (localStorage.getItem("theme") as "dark" | "light") || "light";
   });
@@ -22,7 +25,7 @@ export default function App() {
     loadState,
     isUsingMockData,
     errorMessage,
-  } = useActivityData();
+  } = useActivityData(selectedDate);
   const collectorStatus = useCollectorStatus();
 
   useEffect(() => {
@@ -53,13 +56,18 @@ export default function App() {
             <div className="hidden text-xs font-bold uppercase tracking-[0.18em] text-muted sm:block">
               {activeTab} / Local activity journal
             </div>
-            <div className="sm:ml-auto">
+            <div className="flex items-center gap-2 sm:ml-auto">
+              <CalendarPicker
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+              />
               <ThemeToggle theme={theme} setTheme={setTheme} />
             </div>
           </div>
           {activeTab === "Today" && (
             <TodayPage
               apps={todayStats}
+              selectedDate={selectedDate}
               loadState={loadState}
               isUsingMockData={isUsingMockData}
               errorMessage={errorMessage}
@@ -70,6 +78,7 @@ export default function App() {
             <TimelinePage
               slices={timelineSlices}
               buckets={timelineBuckets}
+              selectedDate={selectedDate}
               loadState={loadState}
               isUsingMockData={isUsingMockData}
               errorMessage={errorMessage}

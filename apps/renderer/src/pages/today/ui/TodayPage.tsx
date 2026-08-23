@@ -8,10 +8,12 @@ import { TopAppHero } from "../../../widgets/today/TopAppHero";
 import { RemainingAppsTable } from "../../../widgets/today/RemainingAppsTable";
 import { PageHeader } from "../../../shared/ui/PageHeader";
 import { MetricCard } from "../../../shared/ui/MetricCard";
-import { formatSeconds } from "../../../shared/lib/time";
+import { formatLocalDateISO, formatSeconds } from "../../../shared/lib/time";
+import { formatCalendarDate } from "../../../shared/lib/calendar";
 
 type Props = {
   apps: AppActivity[];
+  selectedDate: string;
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
@@ -20,6 +22,7 @@ type Props = {
 
 export function TodayPage({
   apps,
+  selectedDate,
   loadState,
   isUsingMockData,
   errorMessage,
@@ -35,13 +38,15 @@ export function TodayPage({
     (total, app) => total + app.keypressCount,
     0,
   );
+  const isToday = selectedDate === formatLocalDateISO();
+  const selectedLabel = formatCalendarDate(selectedDate);
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Today / Focus overview"
-        title="오늘 집중한 앱"
-        description="오늘 기록된 앱별 활동 시간과 상호작용을 확인합니다."
-        meta={<>Today<br />Activity</>}
+        title={isToday ? "오늘 집중한 앱" : `${selectedLabel} 활동`}
+        description={`${isToday ? "오늘" : selectedLabel} 기록된 앱별 활동 시간과 상호작용을 확인합니다.`}
+        meta={<>{selectedLabel}<br />Activity</>}
         tone="warm"
       />
       <ActivityStateNotice

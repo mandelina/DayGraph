@@ -58,6 +58,8 @@ const result = await evaluate(`(async()=>{
     todayThumbnails: false,
     workspaceThumbnail: false,
     activeNavIcon: false,
+    calendar: false,
+    dateSelection: false,
     tabs: {},
   };
   const status = await window.api?.getCollectorStatus?.();
@@ -73,6 +75,23 @@ const result = await evaluate(`(async()=>{
     await new Promise((resolve) =>
       setTimeout(resolve, tab === "Today" ? 500 : 120),
     );
+    if (tab === "Today") {
+      const dateToggle = document.querySelector('button[aria-label="날짜 선택"]');
+      dateToggle?.click();
+      if (dateToggle) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      checks.calendar =
+        Boolean(document.querySelector('[aria-label="Activity calendar"]')) &&
+        document.querySelectorAll('button[aria-label*="활동 보기"]').length >= 28;
+      const todayReset = [...document.querySelectorAll("button")].find(
+        (item) => item.innerText.includes("오늘로 이동"),
+      );
+      todayReset?.click();
+      if (todayReset) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
     checks.tabs[tab] = document.body.innerText.includes(heading);
     if (tab === "Today") {
       const emptyToday = document.body.innerText.includes(
@@ -82,6 +101,32 @@ const result = await evaluate(`(async()=>{
         emptyToday || document.querySelectorAll("main img[alt]").length > 0;
       checks.workspaceThumbnail =
         emptyToday || document.querySelectorAll("aside img[alt]").length > 0;
+      const reopenForSelection = document.querySelector('button[aria-label="날짜 선택"]');
+      reopenForSelection?.click();
+      if (reopenForSelection) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      const otherDate = [...document.querySelectorAll('button[aria-label*="활동 보기"]')]
+        .find((item) => item.getAttribute("aria-pressed") !== "true");
+      otherDate?.click();
+      if (otherDate) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        checks.dateSelection =
+          document.querySelector("h1")?.innerText.includes("활동") === true &&
+          !document.querySelector('button[aria-label="날짜 선택"]')?.innerText.includes("Today");
+        const reopenCalendar = document.querySelector('button[aria-label="날짜 선택"]');
+        reopenCalendar?.click();
+        if (reopenCalendar) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        const backToToday = [...document.querySelectorAll("button")].find(
+          (item) => item.innerText.includes("오늘로 이동"),
+        );
+        backToToday?.click();
+        if (backToToday) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
     }
     if (tab === "Settings") {
       const activeNav = document.querySelector(

@@ -28,7 +28,7 @@ type ActivityData = {
  * Collector → Electron IPC → Renderer 흐름으로 들어온 Activity 데이터를
  * Today 요약과 Timeline 그래프로 동시에 사용할 수 있게 가공한다.
  */
-export function useActivityData(): ActivityData {
+export function useActivityData(dateISO = formatLocalDateISO()): ActivityData {
   const [rows, setRows] = useState<Activity[]>([]);
   const [loadState, setLoadState] = useState<ActivityLoadState>(
     shouldUseMockData() ? "mock" : "loading",
@@ -50,12 +50,15 @@ export function useActivityData(): ActivityData {
       return;
     }
 
-    const todayISO = formatLocalDateISO();
     let disposed = false;
+
+    setRows([]);
+    setLoadState("loading");
+    setErrorMessage(null);
 
     const fetchDay = () => {
       window.api
-        ?.queryDay(todayISO)
+        ?.queryDay(dateISO)
         ?.then((res: unknown) => {
           if (!Array.isArray(res)) {
             console.warn("[ActivityData] queryDay malformed response", res);
@@ -83,13 +86,16 @@ export function useActivityData(): ActivityData {
     };
 
     fetchDay();
-    const interval = setInterval(fetchDay, POLL_INTERVAL_MS);
+    const interval =
+      dateISO === formatLocalDateISO()
+        ? setInterval(fetchDay, POLL_INTERVAL_MS)
+        : undefined;
 
     return () => {
       disposed = true;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [dateISO]);
 
   const fallbackActivities = useMemo(() => generateMockActivities(), []);
 

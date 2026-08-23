@@ -16,10 +16,12 @@ import { TimelineFilters } from "../../../widgets/timeline/Filters";
 import { TimelineStrip } from "../../../widgets/timeline/Strip";
 import { TimelineSessionsList } from "../../../widgets/timeline/SessionsList";
 import { PageHeader } from "../../../shared/ui/PageHeader";
+import { formatCalendarDate } from "../../../shared/lib/calendar";
 
 type Props = {
   slices: TimelineSlice[];
   buckets: TimelineBucket[];
+  selectedDate: string;
   loadState: ActivityLoadState;
   isUsingMockData: boolean;
   errorMessage: string | null;
@@ -29,6 +31,7 @@ type Props = {
 export function TimelinePage({
   slices,
   buckets,
+  selectedDate,
   loadState,
   isUsingMockData,
   errorMessage,
@@ -51,8 +54,8 @@ export function TimelinePage({
       <PageHeader
         eyebrow="Timeline / Activity rhythm"
         title="집중도 시간대 분석"
-        description="5분 단위로 활동 흐름과 앱 전환을 확인합니다."
-        meta={<>5 min<br />Timeline</>}
+        description={`${formatCalendarDate(selectedDate)}의 활동 흐름과 앱 전환을 확인합니다.`}
+        meta={<>{formatCalendarDate(selectedDate)}<br />Timeline</>}
         tone="sage"
       />
       <TimelineStateNotice
