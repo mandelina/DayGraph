@@ -3,10 +3,12 @@ import type { CollectorStatusResponse } from "@daygraph/shared/ipc";
 
 const POLL_INTERVAL_MS = 5000;
 
-export function useCollectorStatus() {
+export function useCollectorStatus(enabled = true) {
   const [status, setStatus] = useState<CollectorStatusResponse | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     let disposed = false;
 
     const fetchStatus = () => {
@@ -32,7 +34,7 @@ export function useCollectorStatus() {
       disposed = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [enabled]);
 
   return status;
 }

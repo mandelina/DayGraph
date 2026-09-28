@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { QueryRangeSummaryResponse } from "@daygraph/shared/ipc";
 import type { Activity } from "../model";
 import {
   buildInsightReport,
@@ -19,12 +20,12 @@ describe("activity reports", () => {
 
   it("현재 주 일별 요약과 이전 주 대비 앱 추이를 계산한다", () => {
     const report = buildWeeklyReport(
-      [
+      createSummary([
         createActivity("2026-08-03", "VSCode", { clicks: 1 }),
         createActivity("2026-08-10", "VSCode", { clicks: 2 }),
         createActivity("2026-08-11", "Chrome"),
         createActivity("2026-08-12", "Chrome", { is_active: false }),
-      ],
+      ]),
       "2026-08-10",
       "2026-08-16",
     );
@@ -42,21 +43,25 @@ describe("activity reports", () => {
   });
 
   it("인사이트는 활성 기록만 사용하고 빈 주를 명시한다", () => {
-    const empty = buildInsightReport([], "2026-08-10", "2026-08-16");
+    const empty = buildInsightReport(
+      { apps: [], days: [] },
+      "2026-08-10",
+      "2026-08-16",
+    );
     expect(empty).toMatchObject({
       hasData: false,
       summary: { highlight: "이번 주 활동 데이터가 없습니다." },
     });
 
     const report = buildInsightReport(
-      [
+      createSummary([
         createActivity("2026-08-10", "VSCode", { clicks: 1 }),
         createActivity("2026-08-10", "Chrome", {
           is_active: false,
           clicks: 50,
           keypress: 50,
         }),
-      ],
+      ]),
       "2026-08-10",
       "2026-08-16",
     );
@@ -98,4 +103,45 @@ function createActivity(
     keypress: 0,
     ...overrides,
   };
+}
+
+function createSummary(rows: Activity[]): QueryRangeSummaryResponse {
+  const apps = new Map<string, QueryRangeSummaryResponse["apps"][number]>();
+  const days = new Map<string, QueryRangeSummaryResponse["days"][number]>();
+
+  for (const row of rows) {
+    const dateISO = row.timestamp.slice(0, 10);
+    const appKey = `${dateISO}:${row.app_name}`;
+    const app = apps.get(appKey) ?? {
+      dateISO,
+      appName: row.app_name,
+      appPath: row.app_path,
+      bundleId: row.bundle_id,
+      totalRows: 0,
+      activeSeconds: 0,
+      inputSeconds: 0,
+      clickCount: 0,
+      keypressCount: 0,
+    };
+    app.totalRows += 1;
+    app.activeSeconds += row.is_active ? 1 : 0;
+    app.inputSeconds += row.is_active && row.clicks + row.keypress > 0 ? 1 : 0;
+    app.clickCount += row.clicks;
+    app.keypressCount += row.keypress;
+    apps.set(appKey, app);
+
+    const day = days.get(dateISO) ?? {
+      dateISO,
+      totalRows: 0,
+      activeSeconds: 0,
+      inputSeconds: 0,
+      appSwitches: 0,
+    };
+    day.totalRows += 1;
+    day.activeSeconds += row.is_active ? 1 : 0;
+    day.inputSeconds += row.is_active && row.clicks + row.keypress > 0 ? 1 : 0;
+    days.set(dateISO, day);
+  }
+
+  return { apps: Array.from(apps.values()), days: Array.from(days.values()) };
 }

@@ -2,13 +2,10 @@ import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { formatError } from "./errors";
 import { createUiohookInputBackend } from "./input-backend";
 import { importOptionalModule } from "./optional-import";
-
-const prebuiltInputHelpers = {
-  darwin: fileURLToPath(new URL("../bin/darwin/daygraph-input-helper", import.meta.url)),
-} as const;
 
 let clicks = 0;
 let keypress = 0;
@@ -97,7 +94,11 @@ async function setupUiohookInputHooks() {
 }
 
 async function getPrebuiltInputHelperPath() {
-  const binaryPath = prebuiltInputHelpers.darwin;
+  const binaryPath = process.env.DAYGRAPH_HELPER_DIR
+    ? join(process.env.DAYGRAPH_HELPER_DIR, "daygraph-input-helper")
+    : fileURLToPath(
+        new URL("../bin/darwin/daygraph-input-helper", import.meta.url),
+      );
   try {
     await fs.access(binaryPath);
   } catch {

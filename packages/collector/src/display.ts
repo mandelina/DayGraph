@@ -2,18 +2,13 @@ import { execFile as execFileCallback } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import type { WindowBounds } from "./active-window";
 import { formatError } from "./errors";
 import { importOptionalModule } from "./optional-import";
 
 type MonitorInfo = { id: number; bounds: WindowBounds };
 const execFile = promisify(execFileCallback);
-
-const prebuiltDisplayHelpers = {
-  darwin: fileURLToPath(
-    new URL("../bin/darwin/daygraph-display-helper", import.meta.url),
-  ),
-} as const;
 
 let displayBackend = "coordinate-fallback";
 let displayBackendError: string | null = null;
@@ -82,7 +77,11 @@ async function getMonitors() {
 }
 
 async function getMacOSMonitors(): Promise<MonitorInfo[]> {
-  const binaryPath = prebuiltDisplayHelpers.darwin;
+  const binaryPath = process.env.DAYGRAPH_HELPER_DIR
+    ? join(process.env.DAYGRAPH_HELPER_DIR, "daygraph-display-helper")
+    : fileURLToPath(
+        new URL("../bin/darwin/daygraph-display-helper", import.meta.url),
+      );
   await fs.access(binaryPath);
   const result = await execFile(binaryPath, [], {
     encoding: "utf8",

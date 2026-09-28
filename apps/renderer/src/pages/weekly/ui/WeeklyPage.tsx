@@ -11,13 +11,13 @@ import { PageHeader } from "../../../shared/ui/PageHeader";
 
 export function WeeklyPage() {
   const range = useMemo(() => getWeeklyQueryRange(), []);
-  const { rows, loadState, errorMessage } = useActivityRange(
+  const { summary, loadState, errorMessage } = useActivityRange(
     range.queryStartISO,
     range.queryEndISO,
   );
   const report = useMemo(
-    () => buildWeeklyReport(rows, range.currentStartISO, range.currentEndISO),
-    [rows, range.currentStartISO, range.currentEndISO],
+    () => buildWeeklyReport(summary, range.currentStartISO, range.currentEndISO),
+    [summary, range.currentStartISO, range.currentEndISO],
   );
 
   return (

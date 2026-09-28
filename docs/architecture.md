@@ -10,19 +10,18 @@ The main architectural goal is to keep personal activity data local while making
 
 ```text
 pnpm dev
-  -> packages/collector
-       active window + input/display backend
-       local HTTP API on 127.0.0.1
   -> apps/electron
        BrowserWindow
        IPC handlers
        app icon lookup
+       starts the collector runtime in-process
+       local HTTP API on 127.0.0.1
   -> apps/renderer
        React UI
        window.api calls through preload
 ```
 
-The collector and Electron app are separate processes in development. Renderer code must assume data arrives through `window.api`, not by importing DB or collector internals.
+The collector runtime is owned by `packages/collector` but is started inside the Electron main process in the root dev and packaged-app flows. The standalone `pnpm collector` command remains available for backend-focused development. Renderer code must assume data arrives through `window.api`, not by importing DB or collector internals.
 
 ## Data Flow
 
@@ -36,6 +35,16 @@ get-windows / native backend
   -> preload window.api.queryDay(dateISO)
   -> renderer useActivityData()
   -> Today / Timeline UI
+```
+
+Weekly and Insights use an aggregated range query so they do not transfer up to fourteen days of one-second rows into the renderer:
+
+```text
+collector GET /summary?start=YYYY-MM-DD&end=YYYY-MM-DD
+  -> Electron ipcMain daygraph:query-range-summary
+  -> preload window.api.queryRangeSummary(startDateISO, endDateISO)
+  -> renderer useActivityRange()
+  -> Weekly / Insights UI
 ```
 
 Health and runtime status use a separate flow:
@@ -97,6 +106,7 @@ activity_log
 ### apps/electron
 
 - Owns BrowserWindow, preload path, IPC handlers, collector HTTP calls, and OS integration.
+- Starts and stops the collector runtime for dev and packaged flows; collector data access still crosses the local HTTP API.
 - Bridges collector data to renderer through typed IPC.
 - Should not import renderer components.
 
@@ -153,6 +163,7 @@ Current channels:
 
 - `daygraph:query-day`
 - `daygraph:query-range`
+- `daygraph:query-range-summary`
 - `daygraph:get-app-icon`
 - `daygraph:get-collector-status`
 - `daygraph:open-data-dir`

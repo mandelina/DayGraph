@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke(IPC.channels.getAppIcon, payload),
   getCollectorStatus: () => ipcRenderer.invoke(IPC.channels.getCollectorStatus),
   openDataDir: () => ipcRenderer.invoke(IPC.channels.openDataDir),
+  queryRangeSummary: (startDateISO: string, endDateISO: string) =>
+    ipcRenderer.invoke(IPC.channels.queryRangeSummary, startDateISO, endDateISO),
 })
 
 // 타입 선언을 위해 글로벌 보강(JSDoc)
@@ -21,6 +23,7 @@ declare global {
       getAppIcon: (payload: { appPath?: string | null; bundleId?: string | null }) => Promise<unknown>
       getCollectorStatus: () => Promise<unknown>
       openDataDir: () => Promise<unknown>
+      queryRangeSummary: (startDateISO: string, endDateISO: string) => Promise<unknown>
     }
   }
 }

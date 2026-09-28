@@ -4,6 +4,7 @@ import { createApiServer } from "./api";
 const mocks = vi.hoisted(() => ({
   queryDay: vi.fn(),
   queryRange: vi.fn(),
+  queryRangeSummary: vi.fn(),
 }));
 
 vi.mock("@daygraph/db/queries", () => mocks);
@@ -12,11 +13,13 @@ describe("collector HTTP API", () => {
   afterEach(() => {
     mocks.queryDay.mockReset();
     mocks.queryRange.mockReset();
+    mocks.queryRangeSummary.mockReset();
   });
 
   it("health, day, range, invalid request, and 404 responses are explicit", async () => {
     mocks.queryDay.mockReturnValue([{ app_name: "DayGraph" }]);
     mocks.queryRange.mockReturnValue([{ app_name: "VSCode" }]);
+    mocks.queryRangeSummary.mockReturnValue({ apps: [], days: [] });
     const server = createApiServer(() => ({ ok: true, status: "healthy" }));
     const baseURL = await listen(server);
 
@@ -39,6 +42,16 @@ describe("collector HTTP API", () => {
       expect(range.status).toBe(200);
       await expect(range.json()).resolves.toEqual([{ app_name: "VSCode" }]);
       expect(mocks.queryRange).toHaveBeenCalledWith(
+        "2026-08-10",
+        "2026-08-16",
+      );
+
+      const summary = await fetch(
+        `${baseURL}/summary?start=2026-08-10&end=2026-08-16`,
+      );
+      expect(summary.status).toBe(200);
+      await expect(summary.json()).resolves.toEqual({ apps: [], days: [] });
+      expect(mocks.queryRangeSummary).toHaveBeenCalledWith(
         "2026-08-10",
         "2026-08-16",
       );

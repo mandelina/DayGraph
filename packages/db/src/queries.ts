@@ -50,6 +50,85 @@ export function queryRange(startDateISO: string, endDateISO: string) {
     .all()
 }
 
+export function queryRangeSummary(startDateISO: string, endDateISO: string) {
+  const { start } = getLocalDayRange(startDateISO)
+  const { end } = getLocalDayRange(endDateISO)
+  if (startDateISO > endDateISO) {
+    throw new Error(
+      `invalid date range: ${startDateISO}..${endDateISO}`
+    )
+  }
+
+  const db = getDB()
+  const appRows = db.all(sql`
+    SELECT
+      strftime('%Y-%m-%d', timestamp, 'localtime') AS dateISO,
+      app_name AS appName,
+      MAX(app_path) AS appPath,
+      MAX(bundle_id) AS bundleId,
+      COUNT(*) AS totalRows,
+      SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS activeSeconds,
+      SUM(CASE WHEN is_active = 1 AND clicks + keypress > 0 THEN 1 ELSE 0 END) AS inputSeconds,
+      SUM(clicks) AS clickCount,
+      SUM(keypress) AS keypressCount
+    FROM activity_log
+    WHERE timestamp >= ${start} AND timestamp < ${end}
+    GROUP BY dateISO, app_name
+    ORDER BY dateISO, activeSeconds DESC
+  `) as Array<Record<string, unknown>>
+
+  const dayRows = db.all(sql`
+    SELECT
+      dateISO,
+      COUNT(*) AS totalRows,
+      SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS activeSeconds,
+      SUM(CASE WHEN is_active = 1 AND clicks + keypress > 0 THEN 1 ELSE 0 END) AS inputSeconds,
+      SUM(CASE
+        WHEN previousApp IS NOT NULL AND previousApp != app_name THEN 1
+        ELSE 0
+      END) AS appSwitches
+    FROM (
+      SELECT
+        strftime('%Y-%m-%d', timestamp, 'localtime') AS dateISO,
+        app_name,
+        is_active,
+        clicks,
+        keypress,
+        LAG(app_name) OVER (ORDER BY timestamp, id) AS previousApp
+      FROM activity_log
+      WHERE timestamp >= ${start} AND timestamp < ${end}
+    )
+    GROUP BY dateISO
+    ORDER BY dateISO
+  `) as Array<Record<string, unknown>>
+
+  return {
+    apps: appRows.map((row) => ({
+      dateISO: String(row.dateISO),
+      appName: String(row.appName),
+      appPath: row.appPath ? String(row.appPath) : null,
+      bundleId: row.bundleId ? String(row.bundleId) : null,
+      totalRows: toNumber(row.totalRows),
+      activeSeconds: toNumber(row.activeSeconds),
+      inputSeconds: toNumber(row.inputSeconds),
+      clickCount: toNumber(row.clickCount),
+      keypressCount: toNumber(row.keypressCount)
+    })),
+    days: dayRows.map((row) => ({
+      dateISO: String(row.dateISO),
+      totalRows: toNumber(row.totalRows),
+      activeSeconds: toNumber(row.activeSeconds),
+      inputSeconds: toNumber(row.inputSeconds),
+      appSwitches: toNumber(row.appSwitches)
+    }))
+  }
+}
+
+function toNumber(value: unknown) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : 0
+}
+
 // 사용자가 보는 로컬 날짜 기준으로 UTC 저장 timestamp 범위를 계산한다.
 export function getLocalDayRange(dateISO: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) {

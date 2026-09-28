@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "tsx src/cli.ts",
     "build:helper:darwin": "sh ./scripts/build-macos-helper.sh",
     "verify:helper:darwin": "sh ./scripts/check-macos-helper.sh",
     "build:helper:darwin-display": "sh ./scripts/build-macos-display-helper.sh",

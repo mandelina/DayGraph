@@ -6,6 +6,7 @@ import type {
   GetAppIconRequest,
   CollectorStatusResponse,
   OpenDataDirResponse,
+  QueryRangeSummaryResponse,
 } from "@daygraph/shared/ipc"
 
 declare global {
@@ -16,6 +17,10 @@ declare global {
       getAppIcon: (payload: GetAppIconRequest) => Promise<GetAppIconResponse>
       getCollectorStatus: () => Promise<CollectorStatusResponse>
       openDataDir: () => Promise<OpenDataDirResponse>
+      queryRangeSummary: (
+        startDateISO: string,
+        endDateISO: string,
+      ) => Promise<QueryRangeSummaryResponse>
     }
   }
 }

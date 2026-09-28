@@ -11,6 +11,7 @@ DayGraph는 Electron, Renderer, Collector, DB가 함께 동작하는 모노레�
 ```text
 apps/electron
   -> packages/shared
+  -> packages/collector (runtime lifecycle only)
 
 apps/renderer
   -> packages/shared
@@ -34,6 +35,7 @@ packages/shared
 - `packages/shared`는 타입과 IPC 계약만 가진다.
 - `packages/db`는 SQLite schema/query만 가진다.
 - Collector backend 실패는 UI에 직접 접근하지 않고 `/health`로 보고한다.
+- Electron main은 `packages/collector`의 시작/종료 함수만 호출할 수 있다. 활동 조회는 Collector의 local HTTP API를 거쳐야 한다.
 
 일부 핵심 규칙은 root ESLint flat config에서 강제한다. 새 경계 규칙을 추가할 때는 `eslint.config.mjs`와 이 문서를 함께 갱신한다.
 
@@ -111,12 +113,12 @@ Allowed:
 - IPC handlers
 - collector HTTP API calls
 - app icon lookup and OS integration
+- collector runtime lifecycle (`startCollector` / `stopCollector`)
 
 Forbidden:
 
 - Renderer component import
 - direct DB query from main when collector API should own the flow
-- long-running collector loop in main process
 
 Change checklist:
 

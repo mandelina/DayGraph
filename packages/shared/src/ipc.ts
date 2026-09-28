@@ -5,7 +5,8 @@ export const IPC = {
     queryRange: 'daygraph:query-range',
     getAppIcon: 'daygraph:get-app-icon',
     getCollectorStatus: 'daygraph:get-collector-status',
-    openDataDir: 'daygraph:open-data-dir'
+    openDataDir: 'daygraph:open-data-dir',
+    queryRangeSummary: 'daygraph:query-range-summary'
   }
 } as const
 
@@ -30,6 +31,31 @@ export type QueryRangeRequest = {
   endDateISO: string
 }
 export type QueryRangeResponse = ActivityRow[]
+
+export type ActivitySummaryAppRow = {
+  dateISO: string
+  appName: string
+  appPath: string | null
+  bundleId: string | null
+  totalRows: number
+  activeSeconds: number
+  inputSeconds: number
+  clickCount: number
+  keypressCount: number
+}
+
+export type ActivitySummaryDayRow = {
+  dateISO: string
+  totalRows: number
+  activeSeconds: number
+  inputSeconds: number
+  appSwitches: number
+}
+
+export type QueryRangeSummaryResponse = {
+  apps: ActivitySummaryAppRow[]
+  days: ActivitySummaryDayRow[]
+}
 
 export type GetAppIconRequest = {
   appPath?: string | null

@@ -12,10 +12,12 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import {
   IPC,
   type CollectorStatusResponse,
 } from "@daygraph/shared/ipc";
+import { startCollector, stopCollector } from "@daygraph/collector";
 
 // 개발 디버깅: Electron의 Chromium 원격 디버깅 포트를 활성화해 VS Code가 렌더러에 attach 가능하도록 함
 // mac/윈도우 공통. dev 모드에서만 설정
@@ -24,14 +26,22 @@ if (!app.isPackaged) {
   app.commandLine.appendSwitch("remote-debugging-port", port);
 }
 
+// DayGraph는 고성능 3D 렌더링이 필요하지 않으므로 Chromium GPU 프로세스를 끄고
+// 백그라운드 실행 시 메모리 사용량을 낮춘다. 필요하면 환경변수로 다시 켤 수 있다.
+if (process.env.DAYGRAPH_ENABLE_GPU !== "1") {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch("disable-gpu");
+}
+
 // 루트 경로를 고정해 상대 DATADIR이 항상 동일하게 동작하도록 보정
 process.env.DAYGRAPH_ROOT ??= process.env.INIT_CWD ?? process.cwd();
+const mainDir = fileURLToPath(new URL(".", import.meta.url));
 
 async function createWindow() {
   // 개발: electron-vite가 제공하는 ELECTRON_RENDERER_URL 사용, 배포: 파일 로드
   const isDev = !app.isPackaged;
   // preload는 CJS(.cjs) 번들을 사용하여 ESM 파싱 오류를 피함
-  const preloadPath = join(__dirname, "../preload/index.cjs");
+  const preloadPath = join(mainDir, "../preload/index.cjs");
 
   // dev에서 가끔 preload 산출물이 늦게 생성되어 ENOENT가 발생하는 경우가 있어 대기
   if (isDev) {
@@ -49,7 +59,7 @@ async function createWindow() {
   });
 
   const devUrl = process.env.ELECTRON_RENDERER_URL || "http://localhost:5173";
-  const prodUrl = "file://" + join(__dirname, "../renderer/index.html");
+  const prodUrl = "file://" + join(mainDir, "../renderer/index.html");
   await win.loadURL(isDev ? devUrl : prodUrl);
 
   // 로드 실패 원인 파악용 로깅 (mac에서 빈 창 문제 추적)
@@ -146,7 +156,22 @@ const iconMemoryCache = new Map<
   { dataUrl: string | null; stamp: number | null }
 >();
 const bundlePathCache = new Map<string, string | null>();
+const ICON_MEMORY_CACHE_LIMIT = 32;
+const BUNDLE_PATH_CACHE_LIMIT = 64;
 let iconCacheDir: string | null = null;
+
+function setBoundedCacheValue<T>(
+  cache: Map<string, T>,
+  key: string,
+  value: T,
+  limit: number,
+) {
+  if (!cache.has(key) && cache.size >= limit) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey !== undefined) cache.delete(oldestKey);
+  }
+  cache.set(key, value);
+}
 
 async function ensureAppReady() {
   if (!app.isReady()) {
@@ -167,6 +192,27 @@ function registerLoginItem() {
   }
 }
 
+function configureCollectorHelperDir() {
+  process.env.DAYGRAPH_HELPER_DIR ??= app.isPackaged
+    ? join(
+        process.resourcesPath,
+        "app.asar.unpacked",
+        "dist",
+        "bin",
+        "darwin",
+    )
+    : join(mainDir, "../bin/darwin");
+  if (app.isPackaged && process.platform === "darwin") {
+    process.env.DAYGRAPH_GET_WINDOWS_BINARY ??= join(
+      process.resourcesPath,
+      "app.asar.unpacked",
+      "node_modules",
+      "get-windows",
+      "main",
+    );
+  }
+}
+
 // Typed IPC: collector HTTP API를 통해 activity 로그 조회
 ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
   const url = new URL("/logs", collectorBaseUrl);
@@ -181,6 +227,16 @@ ipcMain.handle(
     url.searchParams.set("start", startDateISO);
     url.searchParams.set("end", endDateISO);
     return fetchCollectorJson(url, "queryRange");
+  },
+);
+
+ipcMain.handle(
+  IPC.channels.queryRangeSummary,
+  async (_e, startDateISO: string, endDateISO: string) => {
+    const url = new URL("/summary", collectorBaseUrl);
+    url.searchParams.set("start", startDateISO);
+    url.searchParams.set("end", endDateISO);
+    return fetchCollectorJson(url, "queryRangeSummary");
   },
 );
 
@@ -219,10 +275,20 @@ ipcMain.handle(
       console.log("[icon][bundle] resolved", { bundleId, resolvedPath });
       if (resolvedPath) {
         const icon = await getIconFromPath(resolvedPath);
-        iconMemoryCache.set(cacheKey, { dataUrl: icon, stamp: null });
+        setBoundedCacheValue(
+          iconMemoryCache,
+          cacheKey,
+          { dataUrl: icon, stamp: null },
+          ICON_MEMORY_CACHE_LIMIT,
+        );
         return icon;
       }
-      iconMemoryCache.set(cacheKey, { dataUrl: null, stamp: null });
+      setBoundedCacheValue(
+        iconMemoryCache,
+        cacheKey,
+        { dataUrl: null, stamp: null },
+        ICON_MEMORY_CACHE_LIMIT,
+      );
       return null;
     }
 
@@ -233,7 +299,13 @@ ipcMain.handle(
 
 app.whenReady().then(async () => {
   registerLoginItem();
+  configureCollectorHelperDir();
   await ensureDataDir();
+  try {
+    await startCollector();
+  } catch (err) {
+    console.error("[collector] failed to start", err);
+  }
   await createWindow();
 
   app.on("activate", () => {
@@ -244,6 +316,8 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+app.on("will-quit", stopCollector);
 
 async function getCollectorStatus(): Promise<CollectorStatusResponse> {
   const healthUrl = new URL("/health", collectorBaseUrl).toString();
@@ -402,7 +476,12 @@ async function getIconFromPath(appPath: string) {
   const diskHit = await readIconFromDisk(appPath, mtime);
   if (diskHit !== null) {
     console.log("[icon][disk] path hit", appPath);
-    iconMemoryCache.set(cacheKey, { dataUrl: diskHit, stamp: mtime });
+    setBoundedCacheValue(
+      iconMemoryCache,
+      cacheKey,
+      { dataUrl: diskHit, stamp: mtime },
+      ICON_MEMORY_CACHE_LIMIT,
+    );
     return diskHit;
   }
 
@@ -410,7 +489,12 @@ async function getIconFromPath(appPath: string) {
   if (bundleIcon) {
     const dataUrl = await persistIcon(appPath, bundleIcon, mtime);
     console.log("[icon][bundle-file] fetched", appPath);
-    iconMemoryCache.set(cacheKey, { dataUrl, stamp: mtime });
+    setBoundedCacheValue(
+      iconMemoryCache,
+      cacheKey,
+      { dataUrl, stamp: mtime },
+      ICON_MEMORY_CACHE_LIMIT,
+    );
     return dataUrl;
   }
 
@@ -419,11 +503,21 @@ async function getIconFromPath(appPath: string) {
     const fallbackIcon = await app.getFileIcon(appPath, { size: "normal" });
     const dataUrl = await persistIcon(appPath, fallbackIcon, mtime);
     console.log("[icon][file] fetched", appPath);
-    iconMemoryCache.set(cacheKey, { dataUrl, stamp: mtime });
+    setBoundedCacheValue(
+      iconMemoryCache,
+      cacheKey,
+      { dataUrl, stamp: mtime },
+      ICON_MEMORY_CACHE_LIMIT,
+    );
     return dataUrl;
   } catch (err) {
     console.warn("[getAppIcon:path] failed", appPath, err);
-    iconMemoryCache.set(cacheKey, { dataUrl: null, stamp: mtime });
+    setBoundedCacheValue(
+      iconMemoryCache,
+      cacheKey,
+      { dataUrl: null, stamp: mtime },
+      ICON_MEMORY_CACHE_LIMIT,
+    );
     return null;
   }
 }
@@ -558,7 +652,12 @@ async function resolveAppPathFromBundleId(bundleId: string) {
     const spotlightPath = await runMdfind(bundleId);
     console.log("[icon][bundle] spotlight", { bundleId, spotlightPath });
     if (spotlightPath) {
-      bundlePathCache.set(bundleId, spotlightPath);
+      setBoundedCacheValue(
+        bundlePathCache,
+        bundleId,
+        spotlightPath,
+        BUNDLE_PATH_CACHE_LIMIT,
+      );
       return spotlightPath;
     }
   } catch (err) {
@@ -567,7 +666,12 @@ async function resolveAppPathFromBundleId(bundleId: string) {
 
   const fallback = await scanCommonAppDirs(bundleId);
   console.log("[icon][bundle] fallback", { bundleId, fallback });
-  bundlePathCache.set(bundleId, fallback);
+  setBoundedCacheValue(
+    bundlePathCache,
+    bundleId,
+    fallback,
+    BUNDLE_PATH_CACHE_LIMIT,
+  );
   return fallback;
 }
 

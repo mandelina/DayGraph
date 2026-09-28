@@ -1,16 +1,33 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Sidebar } from "../shared/ui/Sidebar";
 import { TodayPage } from "../pages/today/ui/TodayPage";
-import { TimelinePage } from "../pages/timeline/ui/TimelinePage";
-import { WeeklyPage } from "../pages/weekly/ui/WeeklyPage";
-import { InsightsPage } from "../pages/insights/ui/InsightsPage";
-import { SettingsPage } from "../pages/settings/ui/SettingsPage";
 import type { NavItem } from "./navigation";
 import { useActivityData } from "./providers/useActivityData";
 import { useCollectorStatus } from "./providers/useCollectorStatus";
 import { ThemeToggle } from "../shared/ui/ThemeToggle";
 import { CalendarPicker } from "../shared/ui/CalendarPicker";
 import { formatLocalDateISO } from "../shared/lib/time";
+
+const TimelinePage = lazy(() =>
+  import("../pages/timeline/ui/TimelinePage").then((module) => ({
+    default: module.TimelinePage,
+  })),
+);
+const WeeklyPage = lazy(() =>
+  import("../pages/weekly/ui/WeeklyPage").then((module) => ({
+    default: module.WeeklyPage,
+  })),
+);
+const InsightsPage = lazy(() =>
+  import("../pages/insights/ui/InsightsPage").then((module) => ({
+    default: module.InsightsPage,
+  })),
+);
+const SettingsPage = lazy(() =>
+  import("../pages/settings/ui/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavItem>("Today");
@@ -25,8 +42,13 @@ export default function App() {
     loadState,
     isUsingMockData,
     errorMessage,
-  } = useActivityData(selectedDate);
-  const collectorStatus = useCollectorStatus();
+  } = useActivityData(
+    selectedDate,
+    activeTab === "Today" || activeTab === "Timeline",
+  );
+  const collectorStatus = useCollectorStatus(
+    activeTab !== "Weekly" && activeTab !== "Insights",
+  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -62,34 +84,45 @@ export default function App() {
               <ThemeToggle theme={theme} setTheme={setTheme} />
             </div>
           </div>
-          {activeTab === "Today" && (
-            <TodayPage
-              apps={todayStats}
-              selectedDate={selectedDate}
-              loadState={loadState}
-              isUsingMockData={isUsingMockData}
-              errorMessage={errorMessage}
-              collectorStatus={collectorStatus}
-            />
-          )}
-          {activeTab === "Timeline" && (
-            <TimelinePage
-              slices={timelineSlices}
-              buckets={timelineBuckets}
-              selectedDate={selectedDate}
-              loadState={loadState}
-              isUsingMockData={isUsingMockData}
-              errorMessage={errorMessage}
-              collectorStatus={collectorStatus}
-            />
-          )}
-          {activeTab === "Weekly" && <WeeklyPage />}
-          {activeTab === "Insights" && <InsightsPage />}
-          {activeTab === "Settings" && (
-            <SettingsPage theme={theme} collectorStatus={collectorStatus} />
-          )}
+          <Suspense fallback={<PageLoading />}>
+            {activeTab === "Today" && (
+              <TodayPage
+                apps={todayStats}
+                selectedDate={selectedDate}
+                loadState={loadState}
+                isUsingMockData={isUsingMockData}
+                errorMessage={errorMessage}
+                collectorStatus={collectorStatus}
+              />
+            )}
+            {activeTab === "Timeline" && (
+              <TimelinePage
+                slices={timelineSlices}
+                buckets={timelineBuckets}
+                selectedDate={selectedDate}
+                loadState={loadState}
+                isUsingMockData={isUsingMockData}
+                errorMessage={errorMessage}
+                collectorStatus={collectorStatus}
+              />
+            )}
+            {activeTab === "Weekly" && <WeeklyPage />}
+            {activeTab === "Insights" && <InsightsPage />}
+            {activeTab === "Settings" && (
+              <SettingsPage theme={theme} collectorStatus={collectorStatus} />
+            )}
+          </Suspense>
         </div>
       </main>
     </div>
+  );
+}
+
+function PageLoading() {
+  return (
+    <section className="status-banner status-banner-neutral">
+      <span className="status-banner-dot" aria-hidden />
+      <span>화면을 불러오는 중입니다.</span>
+    </section>
   );
 }

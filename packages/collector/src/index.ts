@@ -1,5 +1,5 @@
-import "dotenv/config";
 import { insertActivity } from "@daygraph/db/queries";
+import type { Server } from "node:http";
 import { fileURLToPath } from "node:url";
 import { isAbsolute, resolve } from "node:path";
 import { resolveAppPathFromBundleId } from "./app-path";
@@ -26,6 +26,9 @@ let skippedTicks = 0;
 let lastTickAt: string | null = null;
 let lastTickDurationMs: number | null = null;
 let lastTickError: string | null = null;
+let collectorInterval: ReturnType<typeof setInterval> | null = null;
+let collectorServer: Server | null = null;
+let collectorStarted = false;
 
 async function tick(): Promise<string | null> {
   const win = await getActiveWindow();
@@ -108,24 +111,30 @@ async function runTickOnce() {
   }
 }
 
-async function main() {
+export async function startCollector() {
+  if (collectorStarted) return;
+
   await setupInputHooks();
   process.once("exit", stopInputHooks);
-  process.once("SIGINT", () => {
-    stopInputHooks();
-    process.exit(0);
-  });
-  process.once("SIGTERM", () => {
-    stopInputHooks();
-    process.exit(0);
-  });
   // 루프 ≤ 5ms/틱 유지: 실제 작업은 DB insert 1초/회
-  setInterval(() => {
+  collectorInterval = setInterval(() => {
     void runTickOnce();
   }, 1000);
-  await startApiServer(getHealthPayload);
+  collectorServer = await startApiServer(getHealthPayload);
+  collectorStarted = true;
   // 프로세스 유지
   console.log("[collector] started");
+}
+
+export function stopCollector() {
+  if (collectorInterval) {
+    clearInterval(collectorInterval);
+    collectorInterval = null;
+  }
+  stopInputHooks();
+  collectorServer?.close();
+  collectorServer = null;
+  collectorStarted = false;
 }
 
 function getHealthPayload() {
@@ -166,8 +175,3 @@ function getHealthPayload() {
     timestamp: new Date().toISOString(),
   };
 }
-
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});

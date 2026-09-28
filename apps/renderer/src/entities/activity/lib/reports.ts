@@ -1,5 +1,10 @@
+import type {
+  ActivitySummaryAppRow,
+  ActivitySummaryDayRow,
+  QueryRangeSummaryResponse,
+} from "@daygraph/shared/ipc";
 import type { Activity } from "../model";
-import { summarizeByApp } from "./calculateScore";
+import { ACTIVITY_SCORE_WEIGHTS } from "./calculateScore";
 import { formatLocalDateISO } from "../../../shared/lib/time";
 
 export type WeeklyDaySummary = {
@@ -71,51 +76,58 @@ export function getWeeklyQueryRange(reference = new Date()): WeeklyQueryRange {
 }
 
 export function buildWeeklyReport(
-  rows: Activity[],
+  summary: QueryRangeSummaryResponse,
   currentStartISO: string,
   currentEndISO: string,
 ): WeeklyReport {
-  const currentRows = rows.filter((row) =>
-    isDateInRange(getRowDateISO(row), currentStartISO, currentEndISO),
-  );
   const previousStartISO = formatLocalDateISO(
     addDays(parseLocalDate(currentStartISO), -7),
   );
   const previousEndISO = formatLocalDateISO(
     addDays(parseLocalDate(currentEndISO), -7),
   );
-  const previousRows = rows.filter((row) =>
-    isDateInRange(getRowDateISO(row), previousStartISO, previousEndISO),
-  );
   const days = listDates(currentStartISO, currentEndISO);
   const dailySummary = days.map((dateISO) => {
-    const dayRows = currentRows.filter((row) => getRowDateISO(row) === dateISO);
+    const dayRows = summary.days.find((row) => row.dateISO === dateISO);
     return {
       day: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(
         parseLocalDate(dateISO),
       ),
       dateISO,
-      activeHours: activeSeconds(dayRows) / 3600,
-      focusScore: calculateFocusScore(dayRows),
+      activeHours: (dayRows?.activeSeconds ?? 0) / 3600,
+      focusScore: calculateSummaryFocusScore(dayRows),
     };
   });
 
-  const currentApps = summarizeActiveSeconds(currentRows);
-  const previousApps = summarizeActiveSeconds(previousRows);
-  const appTrend = Array.from(currentApps.entries())
-    .sort((a, b) => b[1] - a[1])
+  const currentApps = summarizeSummaryApps(
+    summary.apps.filter((row) =>
+      isDateInRange(row.dateISO, currentStartISO, currentEndISO),
+    ),
+  );
+  const previousApps = summarizeSummaryApps(
+    summary.apps.filter((row) =>
+      isDateInRange(row.dateISO, previousStartISO, previousEndISO),
+    ),
+  );
+  const previousByName = new Map(
+    previousApps.map((app) => [app.appName, app.activeSeconds]),
+  );
+  const appTrend = currentApps
     .slice(0, 5)
-    .map(([appName, seconds]) => {
-      const previousSeconds = previousApps.get(appName) ?? 0;
+    .map((app) => {
+      const previousSeconds = previousByName.get(app.appName) ?? 0;
       return {
-        appName,
-        hours: seconds / 3600,
+        appName: app.appName,
+        hours: app.activeSeconds / 3600,
         change:
           previousSeconds === 0
-            ? seconds > 0
+            ? app.activeSeconds > 0
               ? 100
               : 0
-            : Math.round(((seconds - previousSeconds) / previousSeconds) * 100),
+            : Math.round(
+                ((app.activeSeconds - previousSeconds) / previousSeconds) *
+                  100,
+              ),
       };
     });
 
@@ -152,20 +164,27 @@ export function buildWeeklyReport(
     dailySummary,
     appTrend,
     insights,
-    hasData: currentRows.some((row) => row.is_active),
+    hasData: summary.days.some(
+      (row) =>
+        isDateInRange(row.dateISO, currentStartISO, currentEndISO) &&
+        row.activeSeconds > 0,
+    ),
   };
 }
 
 export function buildInsightReport(
-  rows: Activity[],
+  summary: QueryRangeSummaryResponse,
   currentStartISO: string,
   currentEndISO: string,
 ): InsightReport {
-  const currentRows = rows.filter((row) =>
-    isDateInRange(getRowDateISO(row), currentStartISO, currentEndISO),
+  const currentDays = summary.days.filter((row) =>
+    isDateInRange(row.dateISO, currentStartISO, currentEndISO),
   );
-  const activeRows = currentRows.filter((row) => row.is_active);
-  if (activeRows.length === 0) {
+  const activeSeconds = currentDays.reduce(
+    (total, row) => total + row.activeSeconds,
+    0,
+  );
+  if (activeSeconds === 0) {
     return {
       summary: { highlight: "이번 주 활동 데이터가 없습니다.", context: "" },
       patterns: [],
@@ -176,18 +195,23 @@ export function buildInsightReport(
 
   const daily = listDates(currentStartISO, currentEndISO).map((dateISO) => ({
     dateISO,
-    score: calculateFocusScore(
-      activeRows.filter((row) => getRowDateISO(row) === dateISO),
+    score: calculateSummaryFocusScore(
+      currentDays.find((row) => row.dateISO === dateISO),
     ),
   }));
   const strongestDay = [...daily].sort((a, b) => b.score - a.score)[0];
-  const appStats = summarizeByApp(activeRows);
+  const appStats = summarizeSummaryApps(
+    summary.apps.filter((row) =>
+      isDateInRange(row.dateISO, currentStartISO, currentEndISO),
+    ),
+  );
   const topApp = appStats[0];
-  const inputRows = activeRows.filter(
-    (row) => row.clicks + row.keypress > 0,
-  ).length;
-  const inputRate = Math.round((inputRows / activeRows.length) * 100);
-  const switches = countAppSwitches(activeRows);
+  const inputSeconds = currentDays.reduce(
+    (total, row) => total + row.inputSeconds,
+    0,
+  );
+  const inputRate = Math.round((inputSeconds / activeSeconds) * 100);
+  const switches = currentDays.reduce((total, row) => total + row.appSwitches, 0);
 
   return {
     summary: {
@@ -202,7 +226,7 @@ export function buildInsightReport(
       {
         type: "주요 활동 앱",
         description: `${topApp?.appName ?? "없음"}이 전체 활동 시간의 ${Math.round(
-          ((topApp?.activeSeconds ?? 0) / Math.max(activeSeconds(activeRows), 1)) *
+            ((topApp?.activeSeconds ?? 0) / Math.max(activeSeconds, 1)) *
             100,
         )}%를 차지합니다.`,
       },
@@ -225,6 +249,58 @@ export function buildInsightReport(
   };
 }
 
+function summarizeSummaryApps(rows: ActivitySummaryAppRow[]) {
+  const map = new Map<string, AppActivitySummary>();
+  for (const row of rows) {
+    if (row.activeSeconds === 0) continue;
+    const current = map.get(row.appName) ?? {
+      appName: row.appName,
+      appPath: row.appPath,
+      bundleId: row.bundleId,
+      activeSeconds: 0,
+      clickCount: 0,
+      keypressCount: 0,
+      score: 0,
+    };
+    current.appPath ??= row.appPath;
+    current.bundleId ??= row.bundleId;
+    current.activeSeconds += row.activeSeconds;
+    current.clickCount += row.clickCount;
+    current.keypressCount += row.keypressCount;
+    map.set(row.appName, current);
+  }
+
+  return Array.from(map.values())
+    .map((entry) => ({
+      ...entry,
+      score: Number(
+        (
+          entry.activeSeconds * ACTIVITY_SCORE_WEIGHTS.active +
+          entry.clickCount * ACTIVITY_SCORE_WEIGHTS.clicks +
+          entry.keypressCount * ACTIVITY_SCORE_WEIGHTS.keys
+        ).toFixed(1),
+      ),
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+
+type AppActivitySummary = {
+  appName: string;
+  appPath: string | null;
+  bundleId: string | null;
+  activeSeconds: number;
+  clickCount: number;
+  keypressCount: number;
+  score: number;
+};
+
+function calculateSummaryFocusScore(row: ActivitySummaryDayRow | undefined) {
+  if (!row || row.totalRows === 0) return 0;
+  const activeRate = row.activeSeconds / row.totalRows;
+  const inputRate = row.inputSeconds / Math.max(row.activeSeconds, 1);
+  return Math.round(activeRate * 60 + inputRate * 40);
+}
+
 export function calculateFocusScore(rows: Activity[]) {
   if (rows.length === 0) return 0;
   const activeRows = rows.filter((row) => row.is_active);
@@ -234,34 +310,6 @@ export function calculateFocusScore(rows: Activity[]) {
   const activeRate = activeRows.length / rows.length;
   const inputRate = inputRows.length / Math.max(activeRows.length, 1);
   return Math.round(activeRate * 60 + inputRate * 40);
-}
-
-function summarizeActiveSeconds(rows: Activity[]) {
-  const result = new Map<string, number>();
-  for (const row of rows) {
-    if (!row.is_active) continue;
-    result.set(row.app_name, (result.get(row.app_name) ?? 0) + 1);
-  }
-  return result;
-}
-
-function activeSeconds(rows: Activity[]) {
-  return rows.filter((row) => row.is_active).length;
-}
-
-function countAppSwitches(rows: Activity[]) {
-  const sorted = [...rows].sort((a, b) =>
-    a.timestamp.localeCompare(b.timestamp),
-  );
-  let switches = 0;
-  for (let index = 1; index < sorted.length; index += 1) {
-    if (sorted[index - 1].app_name !== sorted[index].app_name) switches += 1;
-  }
-  return switches;
-}
-
-function getRowDateISO(row: Activity) {
-  return formatLocalDateISO(new Date(row.timestamp));
 }
 
 function isDateInRange(dateISO: string, startISO: string, endISO: string) {

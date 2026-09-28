@@ -11,14 +11,14 @@ import { PageHeader } from "../../../shared/ui/PageHeader";
 
 export function InsightsPage() {
   const range = useMemo(() => getWeeklyQueryRange(), []);
-  const { rows, loadState, errorMessage } = useActivityRange(
+  const { summary, loadState, errorMessage } = useActivityRange(
     range.currentStartISO,
     range.currentEndISO,
   );
   const report = useMemo(
     () =>
-      buildInsightReport(rows, range.currentStartISO, range.currentEndISO),
-    [rows, range.currentStartISO, range.currentEndISO],
+      buildInsightReport(summary, range.currentStartISO, range.currentEndISO),
+    [summary, range.currentStartISO, range.currentEndISO],
   );
 
   return (

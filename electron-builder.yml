@@ -1,0 +1,16 @@
+appId: com.mandelina.daygraph
+productName: DayGraph
+directories:
+  app: apps/electron
+  output: release
+files:
+  - dist/**
+  - package.json
+asarUnpack:
+  - dist/bin/**
+  - node_modules/get-windows/**
+  - node_modules/**/*.node
+mac:
+  category: public.app-category.productivity
+  target:
+    - dir

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import type { Activity, ActivityLoadState } from "../../entities/activity/model";
+import type { QueryRangeSummaryResponse } from "@daygraph/shared/ipc";
+import type { ActivityLoadState } from "../../entities/activity/model";
+
+const RANGE_POLL_INTERVAL_MS = 30_000;
 
 type ActivityRangeState = {
-  rows: Activity[];
+  summary: QueryRangeSummaryResponse;
   loadState: Exclude<ActivityLoadState, "mock">;
   errorMessage: string | null;
 };
 
 export function useActivityRange(startDateISO: string, endDateISO: string) {
   const [state, setState] = useState<ActivityRangeState>({
-    rows: [],
+    summary: { apps: [], days: [] },
     loadState: "loading",
     errorMessage: null,
   });
@@ -17,9 +20,9 @@ export function useActivityRange(startDateISO: string, endDateISO: string) {
   useEffect(() => {
     let disposed = false;
     const api = window.api;
-    if (!api?.queryRange) {
+    if (!api?.queryRangeSummary) {
       setState({
-        rows: [],
+        summary: { apps: [], days: [] },
         loadState: "error",
         errorMessage: "Electron API unavailable; activity data cannot be loaded.",
       });
@@ -28,27 +31,31 @@ export function useActivityRange(startDateISO: string, endDateISO: string) {
 
     const fetchRange = () => {
       api
-        .queryRange(startDateISO, endDateISO)
+        .queryRangeSummary(startDateISO, endDateISO)
         .then((response) => {
           if (disposed) return;
-          if (!Array.isArray(response)) {
+          if (
+            !response ||
+            !Array.isArray(response.apps) ||
+            !Array.isArray(response.days)
+          ) {
             setState({
-              rows: [],
+              summary: { apps: [], days: [] },
               loadState: "error",
               errorMessage: "Collector returned malformed activity data.",
             });
             return;
           }
           setState({
-            rows: response as Activity[],
-            loadState: response.length > 0 ? "ready" : "empty",
+            summary: response,
+            loadState: response.days.length > 0 ? "ready" : "empty",
             errorMessage: null,
           });
         })
         .catch((error: unknown) => {
           if (disposed) return;
           setState({
-            rows: [],
+            summary: { apps: [], days: [] },
             loadState: "error",
             errorMessage: formatError(error),
           });
@@ -56,7 +63,7 @@ export function useActivityRange(startDateISO: string, endDateISO: string) {
     };
 
     fetchRange();
-    const interval = setInterval(fetchRange, 5000);
+    const interval = setInterval(fetchRange, RANGE_POLL_INTERVAL_MS);
     return () => {
       disposed = true;
       clearInterval(interval);

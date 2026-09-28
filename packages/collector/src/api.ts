@@ -1,4 +1,8 @@
-import { queryDay, queryRange } from "@daygraph/db/queries";
+import {
+  queryDay,
+  queryRange,
+  queryRangeSummary,
+} from "@daygraph/db/queries";
 import { createServer, type Server } from "node:http";
 
 export function createApiServer(getHealthPayload: () => unknown) {
@@ -20,6 +24,29 @@ export function createApiServer(getHealthPayload: () => unknown) {
         }
         console.error("[api] query failed", err);
         writeJson(res, 500, { error: "collector query failed" });
+      }
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/summary") {
+      try {
+        const startDateISO = url.searchParams.get("start");
+        const endDateISO = url.searchParams.get("end");
+        if (!startDateISO || !endDateISO) {
+          throw new Error("invalid date range: start and end are required");
+        }
+        writeJson(
+          res,
+          200,
+          queryRangeSummary(startDateISO, endDateISO),
+        );
+      } catch (err) {
+        if (isInvalidDateError(err)) {
+          writeJson(res, 400, { error: formatError(err) });
+          return;
+        }
+        console.error("[api] summary query failed", err);
+        writeJson(res, 500, { error: "collector summary query failed" });
       }
       return;
     }

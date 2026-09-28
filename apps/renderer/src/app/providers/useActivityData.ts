@@ -28,7 +28,10 @@ type ActivityData = {
  * Collector → Electron IPC → Renderer 흐름으로 들어온 Activity 데이터를
  * Today 요약과 Timeline 그래프로 동시에 사용할 수 있게 가공한다.
  */
-export function useActivityData(dateISO = formatLocalDateISO()): ActivityData {
+export function useActivityData(
+  dateISO = formatLocalDateISO(),
+  enabled = true,
+): ActivityData {
   const [rows, setRows] = useState<Activity[]>([]);
   const [loadState, setLoadState] = useState<ActivityLoadState>(
     shouldUseMockData() ? "mock" : "loading",
@@ -36,6 +39,8 @@ export function useActivityData(dateISO = formatLocalDateISO()): ActivityData {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     if (shouldUseMockData()) {
       setRows([]);
       setLoadState("mock");
@@ -95,7 +100,7 @@ export function useActivityData(dateISO = formatLocalDateISO()): ActivityData {
       disposed = true;
       if (interval) clearInterval(interval);
     };
-  }, [dateISO]);
+  }, [dateISO, enabled]);
 
   const fallbackActivities = useMemo(() => generateMockActivities(), []);
 
