@@ -154,6 +154,19 @@ async function ensureAppReady() {
   }
 }
 
+function registerLoginItem() {
+  if (!app.isPackaged || !["darwin", "win32"].includes(process.platform)) {
+    return;
+  }
+
+  try {
+    app.setLoginItemSettings({ openAtLogin: true });
+    console.log("[startup] login item enabled", { platform: process.platform });
+  } catch (err) {
+    console.error("[startup] failed to enable login item", err);
+  }
+}
+
 // Typed IPC: collector HTTP API를 통해 activity 로그 조회
 ipcMain.handle(IPC.channels.queryDay, async (_e, dateISO: string) => {
   const url = new URL("/logs", collectorBaseUrl);
@@ -219,6 +232,7 @@ ipcMain.handle(
 );
 
 app.whenReady().then(async () => {
+  registerLoginItem();
   await ensureDataDir();
   await createWindow();
 
