@@ -24,6 +24,7 @@ let activeWindowBackend: ActiveWindowStatus["activeWindowBackend"] =
   "unavailable";
 let activeWindowBackendError: string | null = "not initialized";
 let lastLoggedError: string | null = null;
+let activeWindowCircuitBroken = false;
 
 async function readPackagedActiveWindow(binaryPath: string) {
   const { stdout } = await execFileAsync(binaryPath);
@@ -32,8 +33,10 @@ async function readPackagedActiveWindow(binaryPath: string) {
 
 // 권한/네이티브 backend 실패 시 가짜 activity를 저장하지 않고 null을 반환한다.
 export async function getActiveWindow(): Promise<ActiveWindowInfo | null> {
+  const packagedBinary = process.env.DAYGRAPH_GET_WINDOWS_BINARY;
+  if (activeWindowCircuitBroken) return null;
+
   try {
-    const packagedBinary = process.env.DAYGRAPH_GET_WINDOWS_BINARY;
     let res;
     if (packagedBinary) {
       res = await readPackagedActiveWindow(packagedBinary);
@@ -54,6 +57,7 @@ export async function getActiveWindow(): Promise<ActiveWindowInfo | null> {
     activeWindowBackend = "get-windows";
     activeWindowBackendError = null;
     lastLoggedError = null;
+    activeWindowCircuitBroken = false;
 
     return {
       app: res.owner?.name ?? "Unknown",
@@ -63,6 +67,9 @@ export async function getActiveWindow(): Promise<ActiveWindowInfo | null> {
       bounds: res.bounds as WindowBounds | undefined,
     };
   } catch (err) {
+    // 패키지 helper가 권한 오류로 실패하면 매 tick마다 새 프로세스를 띄우지 않는다.
+    // 사용자가 권한을 바꾼 뒤 앱을 재시작하면 회로가 다시 열린다.
+    if (packagedBinary) activeWindowCircuitBroken = true;
     activeWindowBackend = "unavailable";
     activeWindowBackendError = formatError(err);
     if (lastLoggedError !== activeWindowBackendError) {

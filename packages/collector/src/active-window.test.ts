@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { getActiveWindow, getActiveWindowStatus } from "./active-window";
 
 const mocks = vi.hoisted(() => ({
+  execFile: vi.fn(),
   importOptionalModule: vi.fn(),
 }));
 
+vi.mock("node:child_process", () => ({ execFile: mocks.execFile }));
 vi.mock("./optional-import", () => mocks);
 
 describe("active window backend", () => {
@@ -44,5 +46,25 @@ describe("active window backend", () => {
       activeWindowBackend: "get-windows",
       activeWindowBackendError: null,
     });
+  });
+
+  it("패키지 helper 권한 오류 뒤에는 반복 실행을 차단한다", async () => {
+    const previousBinary = process.env.DAYGRAPH_GET_WINDOWS_BINARY;
+    process.env.DAYGRAPH_GET_WINDOWS_BINARY = "/tmp/daygraph-test-helper";
+    mocks.execFile.mockImplementationOnce(
+      (_binary: string, callback: (error: Error) => void) => {
+        callback(new Error("accessibility permission denied"));
+      },
+    );
+
+    await expect(getActiveWindow()).resolves.toBeNull();
+    await expect(getActiveWindow()).resolves.toBeNull();
+    expect(mocks.execFile).toHaveBeenCalledTimes(1);
+
+    if (previousBinary === undefined) {
+      delete process.env.DAYGRAPH_GET_WINDOWS_BINARY;
+    } else {
+      process.env.DAYGRAPH_GET_WINDOWS_BINARY = previousBinary;
+    }
   });
 });
